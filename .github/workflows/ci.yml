@@ -1,0 +1,50 @@
+name: Android client checks
+on:
+  push:
+    branches: [main]
+    paths: ["java/**", "native/**", "ui/**", "app/**", "tools/**", "scripts/**", "tests/**", "build_apk.sh"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+        with:
+          log-accepted-android-sdk-licenses: false
+          packages: 'platform-tools'
+      - name: Build and verify with an ephemeral test key
+        run: |
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;29.0.14206865'
+          python3 -m pip install -r requirements-dev.txt
+          mkdir -p build
+          curl -fL --retry 3 https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar -o build/apktool.jar
+          echo 'dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  build/apktool.jar' | sha256sum -c -
+          bash scripts/fetch_prism_runtime.sh
+          export APKTOOL_JAR="$PWD/build/apktool.jar"
+          export ANDROID_JAR="$ANDROID_HOME/platforms/android-35/android.jar"
+          export ANDROID_TOOLS_JAR="$ANDROID_HOME/build-tools/35.0.0/lib/d8.jar:$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar"
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+          export SIGNING_KEYSTORE="$RUNNER_TEMP/ci-test.jks" SIGNING_KEY_ALIAS=ci-test
+          export SIGNING_STORE_PASSWORD="$(openssl rand -hex 24)"
+          keytool -genkeypair -keystore "$SIGNING_KEYSTORE" -alias "$SIGNING_KEY_ALIAS" -storepass:env SIGNING_STORE_PASSWORD -keypass:env SIGNING_STORE_PASSWORD -dname 'CN=Bonsai Local disposable CI test' -keyalg RSA -keysize 2048 -validity 1
+          bash build_apk.sh
+          bash tests/run_all.sh
+          python3 tests/ui_public_browser.py
+      - name: Preserve test logs, not test keys or compatibility APKs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ui-checks
+          path: verification/1.0/*.png
+          retention-days: 7
