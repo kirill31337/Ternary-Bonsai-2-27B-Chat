@@ -1,0 +1,80 @@
+name: Release source and license audit
+on:
+  push:
+    paths: ['.github/workflows/release-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preserve current staging for verification
+        run: |
+          mkdir -p audit
+          cp -a .bootstrap audit/bootstrap
+      - name: Fetch pinned upstream source and license metadata
+        run: |
+          curl -fL --retry 3 https://github.com/PrismML-Eng/llama.cpp/archive/9a9394a895b96003ca842a6041cb28ac49a108f7.tar.gz -o /tmp/prism-source.tar.gz
+          mkdir /tmp/prism-source
+          tar xzf /tmp/prism-source.tar.gz -C /tmp/prism-source --strip-components=1
+          python3 - <<'PY'
+          import pathlib, shutil, json, urllib.request
+          src=pathlib.Path('/tmp/prism-source'); dst=pathlib.Path('audit/upstream')
+          for p in src.rglob('*'):
+              if p.is_file() and any(x in p.name.lower() for x in ('license','copying','notice')):
+                  if p.suffix.lower() in ('.ttf','.otf','.woff','.woff2'): continue
+                  q=dst/p.relative_to(src);q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q)
+          for name in ['package.json','pnpm-lock.yaml','package-lock.json']:
+              p=src/'tools/ui'/name
+              if p.exists():
+                  q=dst/'tools/ui'/name;q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q)
+          model=pathlib.Path('audit/model');model.mkdir(parents=True,exist_ok=True)
+          for name in ['LICENSE','NOTICE.txt','README.md']:
+              u='https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/raw/6ed5e12bf84b7a63069882c91dd9e9218647d17b/'+name
+              try:
+                  with urllib.request.urlopen(u,timeout=40) as r:(model/name).write_bytes(r.read())
+              except Exception as e: print(name, str(e))
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Collect web UI dependency license texts without running package scripts
+        run: |
+          corepack enable
+          cd /tmp/prism-source/tools/ui
+          corepack pnpm install --frozen-lockfile --ignore-scripts
+          cd "$GITHUB_WORKSPACE"
+          python3 - <<'PY'
+          import pathlib, json, shutil
+          src=pathlib.Path('/tmp/prism-source/tools/ui/node_modules/.pnpm');dst=pathlib.Path('audit/ui-dependencies');dst.mkdir(parents=True,exist_ok=True)
+          rows=[]
+          for root in sorted(src.iterdir()):
+              nm=root/'node_modules'
+              if not nm.is_dir():continue
+              for p in nm.rglob('package.json'):
+                  if p.is_symlink() or 'node_modules' in p.relative_to(nm).parts[:-2]:continue
+                  try:data=json.loads(p.read_text())
+                  except Exception:continue
+                  if not data.get('name') or not data.get('version'):continue
+                  key=data['name'].replace('/','__')+'@'+str(data['version']);target=dst/key
+                  found=[]
+                  for f in p.parent.iterdir():
+                      if f.is_file() and any(x in f.name.lower() for x in ('license','copying','notice')):
+                          target.mkdir(parents=True,exist_ok=True);shutil.copy2(f,target/f.name);found.append(f.name)
+                  rows.append({'name':data['name'],'version':data['version'],'license':data.get('license'),'files':found})
+          (dst/'inventory.json').write_text(json.dumps(rows,indent=2))
+          print('License inventory entries:',len(rows))
+          PY
+      - name: Archive auditable source metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-audit
+          path: audit
+          include-hidden-files: true
+          retention-days: 3
