@@ -10,69 +10,64 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
       - name: Preserve current staging for verification
         run: |
           mkdir -p audit
-          cp -a .bootstrap audit/bootstrap
+          if [ -d .bootstrap ]; then cp -a .bootstrap audit/bootstrap; fi
       - name: Fetch pinned upstream source and license metadata
         run: |
           curl -fL --retry 3 https://github.com/PrismML-Eng/llama.cpp/archive/9a9394a895b96003ca842a6041cb28ac49a108f7.tar.gz -o /tmp/prism-source.tar.gz
           mkdir /tmp/prism-source
           tar xzf /tmp/prism-source.tar.gz -C /tmp/prism-source --strip-components=1
           python3 - <<'PY'
-          import pathlib, shutil, json, urllib.request
+          import pathlib, shutil, urllib.request
           src=pathlib.Path('/tmp/prism-source'); dst=pathlib.Path('audit/upstream')
+          extra={'stb_image.h','miniaudio.h','subprocess.h','package.json','package-lock.json'}
           for p in src.rglob('*'):
-              if p.is_file() and any(x in p.name.lower() for x in ('license','copying','notice')):
-                  if p.suffix.lower() in ('.ttf','.otf','.woff','.woff2'): continue
+              if not p.is_file():continue
+              wanted=any(x in p.name.lower() for x in ('license','copying','notice')) or p.name in extra
+              if p.suffix=='.cmake' or p.name=='CMakeLists.txt':
+                  if 'boringssl' in p.read_text(errors='ignore').lower():wanted=True
+              if wanted and p.suffix.lower() not in ('.ttf','.otf','.woff','.woff2'):
                   q=dst/p.relative_to(src);q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q)
-          for name in ['package.json','pnpm-lock.yaml','package-lock.json']:
-              p=src/'tools/ui'/name
-              if p.exists():
-                  q=dst/'tools/ui'/name;q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q)
           model=pathlib.Path('audit/model');model.mkdir(parents=True,exist_ok=True)
           for name in ['LICENSE','NOTICE.txt','README.md']:
               u='https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/raw/6ed5e12bf84b7a63069882c91dd9e9218647d17b/'+name
-              try:
-                  with urllib.request.urlopen(u,timeout=40) as r:(model/name).write_bytes(r.read())
-              except Exception as e: print(name, str(e))
+              with urllib.request.urlopen(u,timeout=40) as r:(model/name).write_bytes(r.read())
           PY
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
-      - name: Collect web UI dependency license texts without running package scripts
+      - name: Collect web UI license texts without running package scripts
         run: |
-          corepack enable
           cd /tmp/prism-source/tools/ui
-          corepack pnpm install --frozen-lockfile --ignore-scripts
+          npm ci --ignore-scripts --no-audit --no-fund
           cd "$GITHUB_WORKSPACE"
           python3 - <<'PY'
           import pathlib, json, shutil
-          src=pathlib.Path('/tmp/prism-source/tools/ui/node_modules/.pnpm');dst=pathlib.Path('audit/ui-dependencies');dst.mkdir(parents=True,exist_ok=True)
+          src=pathlib.Path('/tmp/prism-source/tools/ui');dst=pathlib.Path('audit/ui-dependencies');dst.mkdir(parents=True,exist_ok=True)
           rows=[]
-          for root in sorted(src.iterdir()):
-              nm=root/'node_modules'
-              if not nm.is_dir():continue
-              for p in nm.rglob('package.json'):
-                  if p.is_symlink() or 'node_modules' in p.relative_to(nm).parts[:-2]:continue
-                  try:data=json.loads(p.read_text())
-                  except Exception:continue
-                  if not data.get('name') or not data.get('version'):continue
-                  key=data['name'].replace('/','__')+'@'+str(data['version']);target=dst/key
-                  found=[]
-                  for f in p.parent.iterdir():
-                      if f.is_file() and any(x in f.name.lower() for x in ('license','copying','notice')):
-                          target.mkdir(parents=True,exist_ok=True);shutil.copy2(f,target/f.name);found.append(f.name)
-                  rows.append({'name':data['name'],'version':data['version'],'license':data.get('license'),'files':found})
+          lock=json.loads((src/'package-lock.json').read_text())
+          for rel,locked in sorted(lock['packages'].items()):
+              if not rel:continue
+              p=src/rel/'package.json'
+              if not p.exists():continue
+              data=json.loads(p.read_text());name=data.get('name');version=data.get('version')
+              if not name or not version:continue
+              key=name.replace('/','__')+'@'+str(version);target=dst/key;found=[]
+              for f in p.parent.iterdir():
+                  if f.is_file() and any(x in f.name.lower() for x in ('license','copying','notice')):
+                      target.mkdir(parents=True,exist_ok=True);shutil.copy2(f,target/f.name);found.append(f.name)
+              rows.append({'name':name,'version':version,'license':data.get('license'),'files':found,'path':rel})
           (dst/'inventory.json').write_text(json.dumps(rows,indent=2))
           print('License inventory entries:',len(rows))
           PY
       - name: Archive auditable source metadata
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: release-audit
           path: audit
