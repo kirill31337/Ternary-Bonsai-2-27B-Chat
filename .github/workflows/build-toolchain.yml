@@ -1,0 +1,36 @@
+name: Android release toolchain
+on:
+  push:
+    paths: ['.github/workflows/build-toolchain.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  toolchain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Prepare official SDK and NDK build inputs
+        run: |
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;29.0.14206865'
+          mkdir -p toolchain/sdk/lib toolchain/ndk/sysroot/usr/lib/aarch64-linux-android
+          cp "$ANDROID_HOME/platforms/android-35/android.jar" toolchain/sdk/
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/d8.jar" toolchain/sdk/lib/
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" toolchain/sdk/lib/
+          NDK="$ANDROID_HOME/ndk/29.0.14206865"
+          ROOT="$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+          cp -a "$ROOT/usr/include" toolchain/ndk/sysroot/usr/
+          cp -a "$ROOT/usr/lib/aarch64-linux-android/28" toolchain/ndk/sysroot/usr/lib/aarch64-linux-android/
+          cp "$NDK/source.properties" toolchain/ndk/
+          cp "$NDK/NOTICE" toolchain/ndk/NOTICE 2>/dev/null || true
+          cp "$NDK/NOTICE.toolchain" toolchain/ndk/NOTICE.toolchain 2>/dev/null || true
+          curl -fL --retry 3 https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar -o toolchain/apktool_3.0.3.jar
+          echo 'dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  toolchain/apktool_3.0.3.jar' | sha256sum -c -
+          find toolchain -type f -print0 | sort -z | xargs -0 sha256sum > toolchain.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: android-release-toolchain
+          path: |
+            toolchain
+            toolchain.sha256
+          retention-days: 1
