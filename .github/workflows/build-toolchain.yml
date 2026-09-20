@@ -8,8 +8,12 @@ permissions:
 jobs:
   toolchain:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+        with:
+          log-accepted-android-sdk-licenses: false
+          packages: 'platform-tools'
       - name: Prepare official SDK and NDK build inputs
         run: |
           sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;29.0.14206865'
