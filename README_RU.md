@@ -7,7 +7,7 @@ Ternary-Bonsai-2-27B на ARM64-смартфоне.
 
 ## Скачать APK
 
-**[Скачать Bonsai Local 1.1.0 для Android · ARM64 · 62 МиБ](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases/download/1.1.0/BonsaiLocal-1.1.0-arm64.apk)**
+**[Скачать Bonsai Local 1.1.2 для Android · ARM64 · 62 МиБ](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases/download/1.1.2/BonsaiLocal-1.1.2-arm64.apk)**
 
 [Последний релиз](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases/latest) · [Все версии](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases) · [English](README.md)
 

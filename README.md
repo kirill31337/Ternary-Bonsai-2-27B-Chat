@@ -10,7 +10,7 @@ vision, optional web tools and a local benchmark.
 
 ## Download APK
 
-**[Download Bonsai Local 1.1.0 for Android · ARM64 · 62 MiB](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases/download/1.1.0/BonsaiLocal-1.1.0-arm64.apk)**
+**[Download Bonsai Local 1.1.2 for Android · ARM64 · 62 MiB](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases/download/1.1.2/BonsaiLocal-1.1.2-arm64.apk)**
 
 [Latest release](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases/latest) · [All versions](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases) · [Русский](README_RU.md)
 
