@@ -62,6 +62,6 @@ if [[ ! -f "$KEYSTORE" ]]; then
   echo "Set SIGNING_KEYSTORE/SIGNING_* or create an ephemeral test key for CI." >&2
   exit 2
 fi
-java -cp "$ANDROID_TOOLS_JAR:build/tools" SignApk build/unsigned.apk build/BonsaiLocal-1.1.1-arm64.apk "$KEYSTORE" "$ALIAS" "$STOREPASS" "$KEYPASS" "$PREV"
-TEST_APK=build/BonsaiLocal-1.1.1-arm64.apk python3 -m pytest -q
+java -cp "$ANDROID_TOOLS_JAR:build/tools" SignApk build/unsigned.apk build/BonsaiLocal-1.1.2-arm64.apk "$KEYSTORE" "$ALIAS" "$STOREPASS" "$KEYPASS" "$PREV"
+TEST_APK=build/BonsaiLocal-1.1.2-arm64.apk python3 -m pytest -q
 node tests/ui_state_test.cjs

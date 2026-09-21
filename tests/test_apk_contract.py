@@ -3,6 +3,20 @@ import os, struct, subprocess, tempfile, zipfile
 from pathlib import Path
 APK = Path(os.environ.get('TEST_APK', str(Path(__file__).resolve().parents[1]/'build/unsigned.apk')))
 
+def test_resource_table_can_be_memory_mapped_by_android_installer():
+    # Required for target SDK >= 30; valid signatures alone do not imply installability.
+    # Inspect the delivered ZIP payload, not the requested Apktool configuration.
+    with zipfile.ZipFile(APK) as z, APK.open('rb') as raw:
+        entry = z.getinfo('resources.arsc')
+        assert entry.compress_type == zipfile.ZIP_STORED, 'Android 11+ rejects compressed resources.arsc'
+        raw.seek(entry.header_offset)
+        header = raw.read(30)
+        assert header[:4] == b'PK\x03\x04'
+        assert struct.unpack_from('<H', header, 8)[0] == zipfile.ZIP_STORED
+        name_size, extra_size = struct.unpack_from('<HH', header, 26)
+        data_offset = entry.header_offset + 30 + name_size + extra_size
+        assert data_offset % 4 == 0, f'resources.arsc payload is not 4-byte aligned: {data_offset}'
+
 def test_managed_entry_point_available_before_native_load():
     with zipfile.ZipFile(APK) as z:
         assert 'classes.dex' in z.namelist(), 'No managed recovery screen: launch depends on NativeActivity loading successfully'

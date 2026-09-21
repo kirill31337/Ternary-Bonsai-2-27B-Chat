@@ -41,9 +41,11 @@ bash build_apk.sh
 bash tests/run_all.sh
 ```
 
-Output: `build/BonsaiLocal-1.1.1-arm64.apk`.
+Output: `build/BonsaiLocal-1.1.2-arm64.apk`.
 
 The APK targets API 35 (Android 15) and retains minimum API 28 (Android 9).
+`resources.arsc` must remain uncompressed and its ZIP payload must be 4-byte
+aligned. The packaging test inspects the final signed APK for both requirements.
 
 For managed/UI-only updates with **unchanged native source**, set
 `REUSE_NATIVE_FROM_APK=/path/to/verified-previous.apk` to retain its exact ARM64
