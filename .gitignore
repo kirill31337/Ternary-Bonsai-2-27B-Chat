@@ -1,0 +1,11 @@
+/build/
+/.cache/
+/app/lib/arm64-v8a/*.so
+/signing/*.keystore
+/signing/*.jks
+*.gguf
+*.part*
+*.apk
+.DS_Store
+__pycache__/
+*.pyc

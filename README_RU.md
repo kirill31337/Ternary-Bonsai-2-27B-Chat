@@ -1,0 +1,39 @@
+# Bonsai Local
+
+<p align="center"><img src="branding/bonsai-local-icon.png" width="144" alt="Bonsai Local"></p>
+
+**Bonsai Local** — неофициальное Android-приложение для локального запуска
+Ternary-Bonsai-2-27B на ARM64-смартфоне.
+
+> Проект не связан с Prism ML, ggml-org, Alibaba/Qwen, Hugging Face,
+> DuckDuckGo или Brave. Названия используются только для описания совместимости
+> и происхождения компонентов.
+
+## Возможности
+
+- локальный inference 27B GGUF без облачного API;
+- PQ2_0 и PTQ1_0;
+- контекст 4K–256K, FP16/Q4 KV и настройка CPU-потоков;
+- изображения через отдельный Q8 mmproj;
+- опциональные `web_search` / `web_fetch`;
+- скачивание до 8 соединений с паузой и докачкой;
+- импорт уже скачанного файла через системный файловый менеджер;
+- отдельное удаление PTQ1_0, PQ2_0 и mmproj;
+- встроенный benchmark prompt/generation tok/s;
+- веса моделей не входят ни в APK, ни в репозиторий.
+
+## Рекомендуемый старт для 16 ГБ RAM
+
+**PQ2_0 · 16K · KV FP16 · CPU 4/8 · reasoning выключен.**
+
+## Приватность
+
+Inference выполняется на телефоне. Сеть используется только для явно
+запрошенного скачивания модели и опциональных web-tools. Подробнее:
+[PRIVACY.md](PRIVACY.md).
+
+## Права
+
+Код приложения — Apache-2.0. Runtime и модель сохраняют собственные лицензии;
+веса моделью проект не перераспространяет. См. [NOTICE](NOTICE) и
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

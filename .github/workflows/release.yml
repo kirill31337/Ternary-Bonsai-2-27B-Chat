@@ -1,0 +1,57 @@
+name: Release APK
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, e.g. v1.0.0'
+        required: true
+        default: 'v1.0.0'
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+        with:
+          log-accepted-android-sdk-licenses: false
+          packages: 'platform-tools'
+      - name: Check signing secrets
+        env:
+          KEY_B64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_B64 }}
+          STOREPASS: ${{ secrets.ANDROID_SIGNING_STOREPASS }}
+          KEYPASS: ${{ secrets.ANDROID_SIGNING_KEYPASS }}
+          ALIAS: ${{ secrets.ANDROID_SIGNING_ALIAS }}
+        run: |
+          test -n "$KEY_B64" && test -n "$STOREPASS" && test -n "$KEYPASS" && test -n "$ALIAS"
+          printf '%s' "$KEY_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+      - name: Build inputs
+        run: |
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          python3 -m pip install -r requirements-dev.txt
+          mkdir -p build
+          curl -fL --retry 3 https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar -o build/apktool.jar
+          echo 'dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  build/apktool.jar' | sha256sum -c -
+          bash scripts/fetch_prism_runtime.sh
+      - name: Build signed APK
+        env:
+          APKTOOL_JAR: ${{ github.workspace }}/build/apktool.jar
+          ANDROID_JAR: ${{ env.ANDROID_HOME }}/platforms/android-35/android.jar
+          ANDROID_TOOLS_JAR: ${{ env.ANDROID_HOME }}/build-tools/35.0.0/lib/d8.jar:${{ env.ANDROID_HOME }}/build-tools/35.0.0/lib/apksigner.jar
+          SIGNING_KEYSTORE: ${{ runner.temp }}/release.jks
+          SIGNING_ALIAS: ${{ secrets.ANDROID_SIGNING_ALIAS }}
+          SIGNING_STOREPASS: ${{ secrets.ANDROID_SIGNING_STOREPASS }}
+          SIGNING_KEYPASS: ${{ secrets.ANDROID_SIGNING_KEYPASS }}
+        run: bash build_apk.sh
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha256sum build/BonsaiLocal-1.0.0-arm64.apk > build/BonsaiLocal-1.0.0-arm64.apk.sha256
+          gh release create '${{ inputs.tag }}' build/BonsaiLocal-1.0.0-arm64.apk build/BonsaiLocal-1.0.0-arm64.apk.sha256 --title 'Bonsai Local 1.0.0' --notes-file RELEASE_NOTES.md

@@ -1,0 +1,13 @@
+Bonsai Local
+Copyright 2026 Kirill Godovanyuk and contributors.
+
+This product includes software developed by the ggml/llama.cpp project and a
+Prism ML-maintained llama.cpp fork, distributed under the MIT License.
+
+Created using Bonsai by Prism ML.
+Ternary-Bonsai-2-27B is copyright 2026-present Prism ML, Inc. and is made
+available under the Apache License 2.0. The model is based on Qwen3.8-27B,
+Copyright 2026 Alibaba Cloud, also made available under the Apache License 2.0.
+
+Bonsai Local is an independent community project and is not affiliated with or
+endorsed by Prism ML, ggml-org, Alibaba/Qwen, Hugging Face, DuckDuckGo or Brave.

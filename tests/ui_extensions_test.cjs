@@ -1,0 +1,28 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const js=fs.readFileSync(__dirname+'/../app/assets/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+let calls=[],consent=false,lastConfirm='',failure='';const e={};for(const m of fs.readFileSync(__dirname+'/../app/assets/index.html','utf8').matchAll(/id="([^"]+)"/g))e[m[1]]={value:'',textContent:'',checked:false,disabled:false,hidden:false,style:{}};
+const ext={vision:false,mode:0,provider:'duckduckgo',hasKey:false,webReady:true,error:'',test:'',files:[{index:0,name:'PTQ.gguf',size:5946648928,bytes:5946648928,ready:true},{index:1,name:'PQ.gguf',size:7206168928,bytes:7206168928,ready:true},{index:2,name:'mmproj.gguf',size:629246976,bytes:0,ready:false}]};
+let s={engine:{state:5,pending:0,alive:false,exit:-999},transfer:{state:'idle',busy:false,total:7206168928,done:0},hasModel:true,models:[{index:1,quant:'PQ2_0',size:7206168928,ready:true}],options:{modelIndex:1,ctxSize:16384,kvQ4:false,threads:4,batchThreads:8,thinking:0},benchmark:{state:'idle',busy:false},extensions:ext};
+const B={status:()=>JSON.stringify(s),setVision:x=>(calls.push(['vision',x]),failure),deleteAsset:x=>(calls.push(['delete',x]),failure),downloadVision:()=>calls.push(['downloadVision']),chooseVision:()=>calls.push(['chooseVision']),configureWeb:(...x)=>(calls.push(['web',...x]),failure),testWeb:()=>calls.push(['testWeb'])};
+const ctx=vm.createContext({document:{getElementById:id=>e[id]||=( {value:'',textContent:'',checked:false,disabled:false,hidden:false,style:{}})},Bonsai:B,confirm:x=>(lastConfirm=x,consent),setTimeout:()=>{},console});vm.runInContext(js,ctx);let n=0;function run(s){return vm.runInContext(s,ctx)}function poll(){run('poll()')}function check(name,f){calls=[];f();console.log('PASS '+name);n++;}
+check('extensions startup never requests network/download/delete/load',()=>assert.equal(calls.length,0));
+check('web disabled by default; API password not populated',()=>{assert.equal(e.webMode.value,'0');assert.equal(e.webKey.value,'');assert(e.webTest.disabled)});
+check('vision disabled until verified projector exists',()=>assert(e.visionOn.disabled&&!e.visionDownload.hidden));
+check('storage exposes independent identities, no empty-file deletion',()=>{assert(!e.delete0.disabled&&!e.delete1.disabled&&e.delete2.disabled)});
+check('cancel deletion has no effect',()=>{run('removeFile(0)');assert.equal(calls.length,0)});
+check('delete confirmation targets only PTQ identity',()=>{consent=true;run('removeFile(0)');assert.deepEqual(calls,[['delete',0]]);assert(lastConfirm.includes('PTQ.gguf'));assert(!lastConfirm.includes('PQ.gguf'))});
+check('cancel mmproj download has no effect',()=>{consent=false;run('getVision(false)');assert.equal(calls.length,0)});
+check('mmproj download does not request language model reconfiguration',()=>{consent=true;run('getVision(false)');assert.deepEqual(calls,[['downloadVision']])});
+check('mmproj import uses module picker, warns of additional local copy',()=>{run('getVision(true)');assert.deepEqual(calls,[['chooseVision']]);assert(lastConfirm.includes('629'))});
+check('downloaded module is not automatically enabled',()=>{ext.files[2].bytes=629246976;ext.files[2].ready=true;poll();assert(!e.visionOn.disabled&&!e.visionOn.checked);assert(e.visionDownload.hidden);assert.equal(calls.length,0)});
+check('checkbox actually calls native facade',()=>{e.visionOn.checked=true;run('toggleVision()');assert.deepEqual(calls,[['vision',true]])});
+check('native vision error visibly restores saved setting',()=>{failure='busy';e.visionOn.checked=true;run('toggleVision()');assert(!e.visionOn.checked);assert(e.extensionAction.textContent.includes('busy'));failure=''});
+check('cancel outbound permission sends no configuration',()=>{consent=false;e.webMode.value='2';run('saveWeb(false)');assert.equal(calls.length,0)});
+check('explicit web permission passes mode provider key to native only',()=>{consent=true;e.webMode.value='1';e.webProvider.value='brave';e.webKey.value='fixture-secret';run('saveWeb(false)');assert.deepEqual(calls,[['web',1,'brave','fixture-secret',false]]);assert.equal(e.webKey.value,'');assert(lastConfirm.includes('поисков'))});
+check('key indicator does not contain actual key',()=>{ext.hasKey=true;ext.provider='brave';ext.mode=1;poll();assert(e.keyInfo.textContent.includes('Keystore'));assert(!e.keyInfo.textContent.includes('fixture-secret'))});
+check('explicit key deletion disables web and clears key, not models',()=>{run('saveWeb(true)');assert.deepEqual(calls,[['web',0,'brave','',true]])});
+check('web self-test requires explicit click',()=>{ext.mode=1;poll();assert.equal(calls.length,0);run('checkWeb()');assert.deepEqual(calls,[['testWeb']])});
+check('provider test output rendered as text not injected HTML',()=>{ext.test='<script>steal()</script>';poll();assert.equal(e.webResult.textContent,ext.test)});
+check('busy transfer prevents all asset mutations',()=>{s.transfer.busy=true;poll();run('removeFile(0);getVision(false);getVision(true);toggleVision()');assert.equal(calls.length,0);assert(e.delete0.disabled&&e.delete1.disabled&&e.delete2.disabled&&e.visionOn.disabled);s.transfer.busy=false});
+check('errored but still alive runtime remains locked and stoppable',()=>{s.engine={state:4,pending:0,alive:true,error:'child still alive'};poll();assert(e.delete0.disabled&&e.visionOn.disabled);assert(!e.stop.hidden);run('removeFile(0)');assert.equal(calls.length,0)});
+console.log('EXTENSION UI CHECKS '+n+'; shipped JS, DOM/Android bridge boundary doubles.');

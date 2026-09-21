@@ -1,0 +1,16 @@
+{
+  "lib/arm64-v8a/libggml-cpu-android_armv8.0_1.so": "56b08ec1ea1e80fa32f8764f138a94ea9473e749cfe3c0894cb7d9b890e6c63f",
+  "lib/arm64-v8a/libllama.so": "0e2e6ad3d409dfbea74cedf9c6baaf78b28fc11368114f96f67e7b3567c377bf",
+  "lib/arm64-v8a/libggml-cpu-android_armv9.2_2.so": "d001f8f2ed7f0c2b374c66e6560d24b993bc798b4c735f11d9af5f31c01e084c",
+  "lib/arm64-v8a/libllama-common.so": "3f4d915b7f8e1c8d370030edf841df1c011a951f9f84b27b3ff037b8a22e1fa4",
+  "lib/arm64-v8a/libggml-cpu-android_armv9.2_1.so": "67c1415dee8eb799b8efc0b678673c2604f7f8c9a3c958efba567d712be606da",
+  "lib/arm64-v8a/libggml-cpu-android_armv8.2_2.so": "16d653c88f596b9863026366ecfe3ebfc201500c36c777a7b5d6ab14d2d3a5a1",
+  "lib/arm64-v8a/libggml-cpu-android_armv8.2_1.so": "cfb9a28f0c7fb186cb97e4b5c51bde24df9b13f2665c996060a03a19f279f665",
+  "lib/arm64-v8a/libmtmd.so": "52b29efcbcd1531388bc928ced3f8a5e8ce7a7e7f413432a28df9bce77bf9a85",
+  "lib/arm64-v8a/libggml-cpu-android_armv9.0_1.so": "55808679b12bbb2cdedc911dbd9b4edd1876b8b83c9914178e18ea0adebc7ef5",
+  "lib/arm64-v8a/libggml-base.so": "917d4e76baa78e979d2ad63f2ba37d0842085501b77d5eed30ee870f5ff4ee88",
+  "lib/arm64-v8a/libllama-server-impl.so": "0f1e251aed18c312b89864aaf1afc20cbc5202c0c0e01e8c47165881e2a6c73d",
+  "lib/arm64-v8a/libggml.so": "d893f73a5e50c650731cdd0a87720967ec3d0ae8ffde1051a50c7e60d586d387",
+  "lib/arm64-v8a/libggml-cpu-android_armv8.6_1.so": "087a5b721e9bfa758db8d6b0e357ca220867fc58bf8fe2680ca82eb927fac001",
+  "lib/arm64-v8a/libllama_server_exec.so": "db82377125f69e87c06b402bba1af072e2a4c4cc9945946e4d6378cc213a84d7"
+}

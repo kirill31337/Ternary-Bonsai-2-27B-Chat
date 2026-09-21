@@ -1,0 +1,8 @@
+Ternary-Bonsai-2-27B model weights are NOT bundled in this APK.
+When downloaded by the user, they are obtained directly from the publisher.
+
+Copyright 2026-present Prism ML, Inc.
+License: Apache License 2.0.
+Created using Bonsai by Prism ML.
+Base model identified by the model card: Qwen3.8-27B, Copyright 2026 Alibaba Cloud, Apache-2.0.
+Publisher repository: https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf
