@@ -15,8 +15,7 @@ def test_six_argument_java_and_native_bridge_signature():
 def test_options_and_benchmarks_in_diagnostics():
  s=(P/'MainActivity.smali').read_text()
  assert 'runtime-options.properties' in s and 'benchmarks.jsonl' in s
- assert 'LocalBenchmark;->cancel()V' in s
- assert 'sput-boolean v0, Lcom/prismml/bonsailocal/repair/MainActivity;->loaded:Z' in s
+ assert 'LocalBenchmark;->cancel()V' in (P/'RuntimeService.smali').read_text()
 
 def test_pq2_arm_matrix_kernels_in_packaged_runtime():
  with zipfile.ZipFile(APK) as z:

@@ -22,6 +22,10 @@ public final class BoundaryTest {
   client.shouldOverrideUrlLoading(v,new R("https://example.com/",true,false));ok(a.externalCalls==0,"automatic top-level navigation cannot open external browser");
   client.shouldOverrideUrlLoading(v,new R("https://example.com/",true,true));ok(a.externalCalls==1,"explicit source link opens external browser only");
   ok(!client.shouldOverrideUrlLoading(v,new R("http://127.0.0.1:18080/",true,true))&&v.removed.contains("Bonsai"),"management JavascriptInterface removed before trusted chat navigation");
+  final String[] requested={null};LocalWebClient manager=new LocalWebClient(new LocalWebClient.ChatNavigation(){public void open(String url){requested[0]=url;}});
+  v.url="file:///android_asset/index.html";v.removed.clear();
+  ok(manager.shouldOverrideUrlLoading(v,new R("http://127.0.0.1:18080/bonsai-connect",true,true))&&requested[0].endsWith("/bonsai-connect")&&v.removed.isEmpty(),"management navigation is cancelled and delegated to a separate unprivileged chat document");
+  requested[0]=null;manager.shouldOverrideUrlLoading(v,new R("http://127.0.0.1:18081/",true,true));ok(requested[0]==null,"untrusted local origin cannot reach native chat navigation");
   ok(client.shouldInterceptRequest(v,new R("https://untrusted.example/image",false,false)).code==403,"external subresource blocked in privileged chat WebView");
   ok(client.shouldInterceptRequest(v,new R("http://127.0.0.1:29999/",false,false)).code==403,"other local services blocked in chat WebView");
   ok(client.shouldInterceptRequest(v,new R("http://127.0.0.1:18080/v1/models",false,false))==null,"chat API requests stay with actual native server");

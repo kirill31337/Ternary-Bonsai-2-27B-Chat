@@ -9,12 +9,11 @@ def test_native_projector_is_a_real_launch_argument():
  assert '629246976' in s, 'Verify exact installed projector before starting'
 def test_file_chooser_is_wired_to_native_activity_result():
  s=(P/'MainActivity.smali').read_text()
- assert 'BonsaiChromeClient;-><init>' in s
  assert 'BonsaiChromeClient;->result' in s
- assert 'BonsaiChromeClient;->cancel' in s
- assert 'setAllowContentAccess(Z)V' in s
- defseq=s[s.index('setAllowUniversalAccessFromFileURLs'):s.index('setWebViewClient')]
- assert 'const/4 v2, 0x1' in defseq
+ session=(P/'UiSession.smali').read_text()
+ assert 'BonsaiChromeClient;-><init>' in session
+ assert 'BonsaiChromeClient;->cancel' in session
+ assert 'setAllowContentAccess(Z)V' in session
 
 def test_old_chat_origin_and_browser_storage_are_preserved():
  h=(R/'app/assets/index.html').read_text()

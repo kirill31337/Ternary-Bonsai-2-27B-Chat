@@ -1,11 +1,11 @@
 version: v3.0.3-21-076ccc60-SNAPSHOT
-apkFileName: BonsaiLocal-1.0.0-arm64.apk
+apkFileName: BonsaiLocal-1.1.0-arm64.apk
 sdkInfo:
   minSdkVersion: 28
   targetSdkVersion: 28
 versionInfo:
-  versionCode: 100
-  versionName: 1.0.0
+  versionCode: 110
+  versionName: 1.1.0
 usesFramework:
   ids:
   - 1

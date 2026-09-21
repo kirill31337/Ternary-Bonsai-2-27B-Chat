@@ -46,28 +46,10 @@
 .end method
 
 .method private destroyWeb()V
-    .locals 2
-
-    invoke-static {p0}, Lcom/prismml/bonsailocal/repair/BonsaiChromeClient;->cancel(Landroid/app/Activity;)V
-
-
-    iget-object v0, p0, Lcom/prismml/bonsailocal/repair/MainActivity;->web:Landroid/webkit/WebView;
-
-    if-eqz v0, :cond_0
-
-    const-string v1, "Bonsai"
-
-    invoke-virtual {v0, v1}, Landroid/webkit/WebView;->removeJavascriptInterface(Ljava/lang/String;)V
-
-    invoke-virtual {v0}, Landroid/webkit/WebView;->stopLoading()V
-
-    invoke-virtual {v0}, Landroid/webkit/WebView;->destroy()V
-
+    .locals 1
+    invoke-static {p0}, Lcom/prismml/bonsailocal/repair/UiSession;->detach(Lcom/prismml/bonsailocal/repair/MainActivity;)V
     const/4 v0, 0x0
-
     iput-object v0, p0, Lcom/prismml/bonsailocal/repair/MainActivity;->web:Landroid/webkit/WebView;
-
-    :cond_0
     return-void
 .end method
 
@@ -244,38 +226,8 @@
 .end method
 
 .method public home()V
-    .locals 3
-
-    const/4 v0, 0x0
-
-    iput v0, p0, Lcom/prismml/bonsailocal/repair/MainActivity;->page:I
-
-    invoke-direct {p0}, Lcom/prismml/bonsailocal/repair/MainActivity;->layout()Landroid/widget/LinearLayout;
-
-    move-result-object v0
-
-    invoke-direct {p0}, Lcom/prismml/bonsailocal/repair/MainActivity;->destroyWeb()V
-
-    const-string v1, "Bonsai Local 1.0.0\n\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u0437\u0430\u043f\u0443\u0441\u043a"
-
-    invoke-direct {p0, v0, v1}, Lcom/prismml/bonsailocal/repair/MainActivity;->text(Landroid/widget/LinearLayout;Ljava/lang/String;)V
-
-    const-string v1, "\u042d\u0442\u043e\u0442 \u044d\u043a\u0440\u0430\u043d \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442 \u043c\u043e\u0434\u0435\u043b\u044c \u0438\u043b\u0438 \u043d\u0430\u0442\u0438\u0432\u043d\u044b\u0439 \u0434\u0432\u0438\u0436\u043e\u043a.\n\n\u0412\u043d\u0443\u0442\u0440\u0438: \u0441\u043a\u0430\u0447\u0438\u0432\u0430\u043d\u0438\u0435 \u0432 8 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0439, \u043f\u0430\u0443\u0437\u0430 \u0438 \u0434\u043e\u043a\u0430\u0447\u043a\u0430, \u0432\u044b\u0431\u043e\u0440 GGUF \u0438\u0437 \u0444\u0430\u0439\u043b\u043e\u0432\u043e\u0433\u043e \u043c\u0435\u043d\u0435\u0434\u0436\u0435\u0440\u0430. \u0421\u043a\u0430\u0447\u0438\u0432\u0430\u043d\u0438\u0435 \u0438 \u0438\u043c\u043f\u043e\u0440\u0442 \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0430\u044e\u0442\u0441\u044f \u0441 \u0443\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u0435\u043c \u043f\u0440\u0438 \u0441\u0432\u043e\u0440\u0430\u0447\u0438\u0432\u0430\u043d\u0438\u0438. \u041c\u043e\u0434\u0435\u043b\u044c \u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e \u043f\u043e \u043a\u043d\u043e\u043f\u043a\u0435.\n\n\u041f\u043e\u0441\u043b\u0435 \u043e\u0448\u0438\u0431\u043a\u0438 \u0432\u0435\u0440\u043d\u0438\u0442\u0435\u0441\u044c \u0441\u044e\u0434\u0430 \u043a\u043d\u043e\u043f\u043a\u043e\u0439 \u00ab\u041d\u0430\u0437\u0430\u0434\u00bb \u0438 \u043e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u0434\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0443."
-
-    invoke-direct {p0, v0, v1}, Lcom/prismml/bonsailocal/repair/MainActivity;->text(Landroid/widget/LinearLayout;Ljava/lang/String;)V
-
-    const-string v1, "\u041e\u0442\u043a\u0440\u044b\u0442\u044c Bonsai"
-
-    const/4 v2, 0x1
-
-    invoke-direct {p0, v0, v1, v2}, Lcom/prismml/bonsailocal/repair/MainActivity;->button(Landroid/widget/LinearLayout;Ljava/lang/String;I)V
-
-    const-string v1, "\u0414\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0430"
-
-    const/4 v2, 0x2
-
-    invoke-direct {p0, v0, v1, v2}, Lcom/prismml/bonsailocal/repair/MainActivity;->button(Landroid/widget/LinearLayout;Ljava/lang/String;I)V
-
+    .locals 0
+    invoke-virtual {p0}, Lcom/prismml/bonsailocal/repair/MainActivity;->openBonsai()V
     return-void
 .end method
 
@@ -348,19 +300,19 @@
 .end method
 
 .method public onBackPressed()V
-    .locals 1
-
+    .locals 2
     iget v0, p0, Lcom/prismml/bonsailocal/repair/MainActivity;->page:I
-
-    if-eqz v0, :cond_0
-
-    invoke-virtual {p0}, Lcom/prismml/bonsailocal/repair/MainActivity;->home()V
-
+    const/4 v1, 0x2
+    if-ne v0, v1, :background
+    invoke-virtual {p0}, Lcom/prismml/bonsailocal/repair/MainActivity;->openBonsai()V
     return-void
-
-    :cond_0
-    invoke-super {p0}, Landroid/app/Activity;->onBackPressed()V
-
+    :background
+    invoke-static {p0}, Lcom/prismml/bonsailocal/repair/UiSession;->back(Lcom/prismml/bonsailocal/repair/MainActivity;)Z
+    move-result v0
+    if-nez v0, :done
+    const/4 v0, 0x1
+    invoke-virtual {p0, v0}, Landroid/app/Activity;->moveTaskToBack(Z)Z
+    :done
     return-void
 .end method
 
@@ -370,7 +322,7 @@
     invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
 
     :try_start_0
-    invoke-virtual {p0}, Lcom/prismml/bonsailocal/repair/MainActivity;->home()V
+    invoke-virtual {p0}, Lcom/prismml/bonsailocal/repair/MainActivity;->openBonsai()V
     :try_end_0
     .catch Ljava/lang/Throwable; {:try_start_0 .. :try_end_0} :catch_0
 
@@ -385,161 +337,23 @@
 .end method
 
 .method protected onDestroy()V
-    .locals 1
-
-    :try_start_0
-    invoke-virtual {p0}, Landroid/app/Activity;->isFinishing()Z
-
-    move-result v0
-
-    if-eqz v0, :cond_0
-
-    sget-boolean v0, Lcom/prismml/bonsailocal/repair/MainActivity;->loaded:Z
-
-    if-eqz v0, :cond_0
-
-    invoke-static {}, Lcom/prismml/bonsailocal/repair/LocalBenchmark;->cancel()V
-    invoke-static {}, Lcom/prismml/bonsailocal/repair/Bridge;->shutdown()V
-    const/4 v0, 0x0
-    sput-boolean v0, Lcom/prismml/bonsailocal/repair/MainActivity;->loaded:Z
-    :try_end_0
-    .catch Ljava/lang/Throwable; {:try_start_0 .. :try_end_0} :catch_0
-
-    goto :goto_0
-
-    :catch_0
-    move-exception v0
-
-    invoke-static {p0, v0}, Lcom/prismml/bonsailocal/repair/Report;->record(Landroid/content/Context;Ljava/lang/Throwable;)V
-
-    :cond_0
-    :goto_0
+    .locals 0
+    invoke-static {p0}, Lcom/prismml/bonsailocal/repair/UiSession;->detach(Lcom/prismml/bonsailocal/repair/MainActivity;)V
     invoke-super {p0}, Landroid/app/Activity;->onDestroy()V
-
     return-void
 .end method
 
 .method public openBonsai()V
-    .locals 6
-
-    sget-boolean v0, Lcom/prismml/bonsailocal/repair/MainActivity;->loaded:Z
-
-    if-nez v0, :cond_0
-
-    const-string v0, "bonsai_app"
-
-    invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
-
+    .locals 1
+    invoke-static {p0}, Lcom/prismml/bonsailocal/repair/RuntimeEnvironment;->ensure(Landroid/content/Context;)V
     const/4 v0, 0x1
-
     sput-boolean v0, Lcom/prismml/bonsailocal/repair/MainActivity;->loaded:Z
-
-    :cond_0
-    const/4 v0, 0x0
-
-    invoke-virtual {p0, v0}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;
-
+    invoke-static {p0}, Lcom/prismml/bonsailocal/repair/UiSession;->open(Lcom/prismml/bonsailocal/repair/MainActivity;)Landroid/webkit/WebView;
     move-result-object v0
-
-    if-nez v0, :cond_1
-
-    new-instance v0, Ljava/lang/IllegalStateException;
-
-    const-string v1, "Android \u043d\u0435 \u043f\u0440\u0435\u0434\u043e\u0441\u0442\u0430\u0432\u0438\u043b \u043f\u0430\u043f\u043a\u0443 \u043c\u043e\u0434\u0435\u043b\u0438 (getExternalFilesDir \u0432\u0435\u0440\u043d\u0443\u043b null). \u0420\u0430\u0437\u0431\u043b\u043e\u043a\u0438\u0440\u0443\u0439\u0442\u0435 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0435 \u0438 \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u0435 \u0437\u0430\u043f\u0443\u0441\u043a."
-
-    invoke-direct {v0, v1}, Ljava/lang/IllegalStateException;-><init>(Ljava/lang/String;)V
-
-    throw v0
-
-    :cond_1
-    invoke-virtual {v0}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
-
-    move-result-object v1
-
-    invoke-virtual {p0}, Landroid/content/Context;->getApplicationInfo()Landroid/content/pm/ApplicationInfo;
-
-    move-result-object v2
-
-    iget-object v2, v2, Landroid/content/pm/ApplicationInfo;->nativeLibraryDir:Ljava/lang/String;
-
-    invoke-virtual {p0}, Landroid/content/Context;->getFilesDir()Ljava/io/File;
-
-    move-result-object v3
-
-    invoke-virtual {v3}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
-
-    move-result-object v3
-
-    invoke-virtual {p0}, Landroid/content/Context;->getApplicationContext()Landroid/content/Context;
-
-    move-result-object v0
-
-    invoke-static {v0, v1, v2, v3}, Lcom/prismml/bonsailocal/repair/Bridge;->init(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-
-    new-instance v0, Landroid/webkit/WebView;
-
-    invoke-direct {v0, p0}, Landroid/webkit/WebView;-><init>(Landroid/content/Context;)V
-
     iput-object v0, p0, Lcom/prismml/bonsailocal/repair/MainActivity;->web:Landroid/webkit/WebView;
-
-    invoke-virtual {v0}, Landroid/webkit/WebView;->getSettings()Landroid/webkit/WebSettings;
-
-    move-result-object v1
-
-    const/4 v2, 0x1
-
-    invoke-virtual {v1, v2}, Landroid/webkit/WebSettings;->setJavaScriptEnabled(Z)V
-
-    invoke-virtual {v1, v2}, Landroid/webkit/WebSettings;->setDomStorageEnabled(Z)V
-
-    const/4 v2, 0x0
-
-    invoke-virtual {v1, v2}, Landroid/webkit/WebSettings;->setAllowFileAccessFromFileURLs(Z)V
-
-    invoke-virtual {v1, v2}, Landroid/webkit/WebSettings;->setAllowUniversalAccessFromFileURLs(Z)V
-
-    const/4 v2, 0x1
-
-    invoke-virtual {v1, v2}, Landroid/webkit/WebSettings;->setAllowContentAccess(Z)V
-
-    new-instance v1, Lcom/prismml/bonsailocal/repair/LocalWebClient;
-
-    invoke-direct {v1}, Lcom/prismml/bonsailocal/repair/LocalWebClient;-><init>()V
-
-    invoke-virtual {v0, v1}, Landroid/webkit/WebView;->setWebViewClient(Landroid/webkit/WebViewClient;)V
-
-    new-instance v1, Lcom/prismml/bonsailocal/repair/BonsaiChromeClient;
-
-    invoke-direct {v1, p0}, Lcom/prismml/bonsailocal/repair/BonsaiChromeClient;-><init>(Lcom/prismml/bonsailocal/repair/MainActivity;)V
-
-    invoke-virtual {v0, v1}, Landroid/webkit/WebView;->setWebChromeClient(Landroid/webkit/WebChromeClient;)V
-
-    new-instance v1, Lcom/prismml/bonsailocal/repair/TransferFacade;
-
-    invoke-direct {v1, p0}, Lcom/prismml/bonsailocal/repair/TransferFacade;-><init>(Lcom/prismml/bonsailocal/repair/MainActivity;)V
-
-    const-string v2, "Bonsai"
-
-    invoke-virtual {v0, v1, v2}, Landroid/webkit/WebView;->addJavascriptInterface(Ljava/lang/Object;Ljava/lang/String;)V
-
-    invoke-virtual {p0, v0}, Landroid/app/Activity;->setContentView(Landroid/view/View;)V
-
-    const-string v1, "file:///android_asset/index.html"
-
-    invoke-virtual {v0, v1}, Landroid/webkit/WebView;->loadUrl(Ljava/lang/String;)V
-
-    invoke-virtual {p0}, Landroid/app/Activity;->getWindow()Landroid/view/Window;
-
-    move-result-object v0
-
-    const/16 v1, 0x80
-
-    invoke-virtual {v0, v1}, Landroid/view/Window;->addFlags(I)V
-
     const/4 v0, 0x1
-
     iput v0, p0, Lcom/prismml/bonsailocal/repair/MainActivity;->page:I
-
+    invoke-static {p0}, Lcom/prismml/bonsailocal/repair/RuntimeEnvironment;->requestNotifications(Landroid/app/Activity;)V
     return-void
 .end method
 

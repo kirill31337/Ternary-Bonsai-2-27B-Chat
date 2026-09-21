@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.prismml.bonsailocal.repair" android:versionCode="100" android:versionName="1.0.0">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.prismml.bonsailocal.repair" android:versionCode="110" android:versionName="1.1.0">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <application android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="false" android:extractNativeLibs="true" android:hasCode="true" android:label="Bonsai Local" android:theme="@android:style/Theme.Material.NoActionBar" android:usesCleartextTraffic="true">
-        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:name=".MainActivity" android:windowSoftInputMode="adjustResize">
+        <activity android:launchMode="singleTop" android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:name=".MainActivity" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         <service android:exported="false" android:foregroundServiceType="dataSync" android:name=".TransferService" android:stopWithTask="false"/>
+        <service android:name=".RuntimeService" android:exported="false" android:foregroundServiceType="specialUse" android:stopWithTask="false">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-started on-device language model loading and interactive inference while the app is backgrounded"/>
+        </service>
     </application>
 </manifest>

@@ -1,17 +1,9 @@
-# Bonsai Local 1.0.0
+# Bonsai Local 1.1.0
 
-First public-source release.
+- Model loading and inference run in a foreground service with an ongoing notification and Stop action.
+- Backgrounding or recreating the window retains the current chat document and stream.
+- Back from chat opens model controls; returning to chat preserves the conversation.
+- Removed device-specific recommendations and shortened the interface.
+- Native runtime, package name, model storage and update signing certificate remain unchanged.
 
-- redesigned mobile-first launcher/settings UI;
-- original Bonsai Local launcher icon;
-- PQ2_0 / PTQ1_0 model management;
-- 4K–256K context controls and CPU tuning;
-- optional vision projector;
-- optional read-only web search/page tools;
-- resumable 8-connection downloads and local file import;
-- independent deletion of downloaded assets;
-- local performance benchmark;
-- licensing/privacy/security documentation and pinned upstream hashes.
-
-The model weights are not included. Existing experimental installs can update
-only with APKs signed by the historical compatibility certificate.
+Android 9+ ARM64. Model weights are downloaded separately. Force-stop or OS process termination cannot preserve a model in RAM. Host regression suites and APK signing/packaging checks passed; physical-device background behavior has not been tested in this build environment.

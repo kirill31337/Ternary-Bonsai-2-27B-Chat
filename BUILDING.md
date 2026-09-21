@@ -41,7 +41,17 @@ bash build_apk.sh
 bash tests/run_all.sh
 ```
 
-Output: `build/BonsaiLocal-1.0.0-arm64.apk`.
+Output: `build/BonsaiLocal-1.1.0-arm64.apk`.
+
+For managed/UI-only updates with **unchanged native source**, set
+`REUSE_NATIVE_FROM_APK=/path/to/verified-previous.apk` to retain its exact ARM64
+native libraries instead of recompiling the launcher. Set `PREVIOUS_APK` too
+to verify the update uses the same signing certificate. Do not use this option
+after native code changes.
+
+Host tests cover lifecycle state transitions, retained screens and native
+integration. They do not substitute for Android device testing, especially
+vendor battery restrictions or low-memory process termination.
 
 The public tree intentionally contains no production signing key. See
 [RELEASE_SIGNING.md](RELEASE_SIGNING.md).

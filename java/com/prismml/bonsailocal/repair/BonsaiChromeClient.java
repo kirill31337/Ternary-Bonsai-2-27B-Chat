@@ -1,12 +1,16 @@
 package com.prismml.bonsailocal.repair;
+import java.lang.ref.WeakReference;
 import android.app.Activity;import android.content.Intent;import android.net.Uri;import android.webkit.*;import java.util.*;
 /** SAF chooser for local chat attachments. No broad storage, camera or microphone permission. */
 public final class BonsaiChromeClient extends WebChromeClient {
  private static final int PICK=7396;
  private static final Map<Activity,ValueCallback<Uri[]>> waiting=new WeakHashMap<>();
- private final MainActivity activity;
- public BonsaiChromeClient(MainActivity a){activity=a;}
+ private volatile WeakReference<MainActivity> owner;
+ public BonsaiChromeClient(MainActivity a){attach(a);}
+ public void attach(MainActivity a){owner=new WeakReference<>(a);}
  @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){
+  MainActivity activity=owner.get();
+  if(activity==null){callback.onReceiveValue(null);return true;}
   if(!LocalWebClient.chatUrl(view.getUrl())){callback.onReceiveValue(null);return true;}
   cancel(activity);waiting.put(activity,callback);
   try{Intent intent=params.createIntent();intent.addCategory(Intent.CATEGORY_OPENABLE);intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);activity.startActivityForResult(intent,PICK);}

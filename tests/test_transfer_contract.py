@@ -20,7 +20,15 @@ def test_document_picker_accepts_unknown_gguf_mime_and_has_result_handler():
  assert '"*/*"' in s
  assert 'onActivityResult(IILandroid/content/Intent;)V' in s
  assert 'takePersistableUriPermission' in s
- assert 'TransferFacade;-><init>' in s
+ assert 'TransferFacade;-><init>' in (R/'app/smali/com/prismml/bonsailocal/repair/UiSession.smali').read_text()
+
+def test_inference_service_has_independent_foreground_lifetime():
+ root=ET.parse(R/'app/AndroidManifest.xml').getroot()
+ service=next(s for s in root.findall('./application/service') if s.get(A+'name')=='.RuntimeService')
+ assert service.get(A+'exported')=='false'
+ assert service.get(A+'stopWithTask')=='false'
+ assert service.get(A+'foregroundServiceType')=='specialUse'
+ assert 'android.permission.FOREGROUND_SERVICE_SPECIAL_USE' in {p.get(A+'name') for p in root.findall('uses-permission')}
 
 def test_update_preserves_package_and_raises_version():
  root=ET.parse(R/'app/AndroidManifest.xml').getroot()

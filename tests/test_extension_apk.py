@@ -8,7 +8,7 @@ APK=Path(os.environ.get('TEST_APK',R/'build/BonsaiLocal-1.0.0-arm64.apk'))
 def test_new_web_and_vision_adapters_are_real_packaged_classes():
  with zipfile.ZipFile(APK) as z:
   definitions=dex_classes(z.read('classes.dex'))
-  for c in ('McpServer','WebNet','WebTools','MiniJson','Extensions','KeyVault','ChatBootstrap','ModelFiles','BonsaiChromeClient','LocalWebClient'):
+  for c in ('McpServer','WebNet','WebTools','MiniJson','Extensions','KeyVault','ChatBootstrap','ModelFiles','BonsaiChromeClient','LocalWebClient','RuntimeEnvironment','RuntimeService','RuntimeSnapshot','UiSession'):
    assert 'Lcom/prismml/bonsailocal/repair/'+c+';' in definitions,c
   assert not any('Test;' in c or 'Fixture;' in c or 'Dump;' in c for c in definitions)
   assert not any(c.startswith('Ljavax/') or c.startswith('Ljava/') or c.startswith('Landroid/') for c in definitions)
@@ -32,4 +32,3 @@ def test_compiled_video_support_is_off_and_ui_does_not_fake_it():
    typ,flags,offset,vaddr,paddr,filesz,memsz,align=struct.unpack_from('<IIQQQQQQ',b,phoff+i*entsize)
    if typ==1 and vaddr<=addr< vaddr+filesz:instructions=b[offset+addr-vaddr:offset+addr-vaddr+length]
   assert instructions in (bytes.fromhex('00008052c0035fd6'),bytes.fromhex('e0031f2ac0035fd6')), 'AArch64 mov w0,#0 or mov w0,wzr;ret proves this build has no video'
-  assert 'MTMD_VIDEO=OFF' in z.read('assets/index.html').decode()

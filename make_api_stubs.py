@@ -44,6 +44,9 @@ s.update({
 'android/security/keystore/KeyGenParameterSpec': 'public final class KeyGenParameterSpec implements java.security.spec.AlgorithmParameterSpec {public static final class Builder {public Builder(String a,int p){}public Builder setBlockModes(String... x){return this;}public Builder setEncryptionPaddings(String... x){return this;}public Builder setKeySize(int n){return this;}public KeyGenParameterSpec build(){return null;}}}',
 })
 
+s['com/prismml/bonsailocal/repair/Bridge']=s['com/prismml/bonsailocal/repair/Bridge'].replace('public native String status()', 'public static native void init(android.content.Context c,String e,String l,String f);public native String status()')
+s['com/prismml/bonsailocal/repair/Report']='public class Report {public static void record(android.content.Context c,Throwable e){} }'
+
 for name,body in s.items():
  p=r/(name+'.java');p.parent.mkdir(parents=True,exist_ok=True);p.write_text('package '+name.rsplit('/',1)[0].replace('/','.')+';\n'+body+'\n')
 print(r)

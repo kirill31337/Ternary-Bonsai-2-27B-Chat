@@ -4,12 +4,18 @@ import android.webkit.*;import android.net.Uri;import android.content.*;import j
  * Only the chat origin and our authenticated local MCP endpoint may make HTTP requests in it.
  */
 public final class LocalWebClient extends WebViewClient {
- public LocalWebClient(){}
+ public interface ChatNavigation { void open(String url); }
+ private final ChatNavigation navigation;
+ public LocalWebClient(){this(null);}
+ public LocalWebClient(ChatNavigation navigation){this.navigation=navigation;}
  public static boolean chatUrl(String s){if(s==null)return false;try{URI u=new URI(s);return "http".equals(u.getScheme())&&"127.0.0.1".equals(u.getHost())&&u.getPort()==18080&&u.getRawUserInfo()==null;}catch(Exception e){return false;}}
  @Override public boolean shouldOverrideUrlLoading(WebView v,WebResourceRequest r){return navigate(v,r.getUrl().toString(),r.isForMainFrame()&&r.hasGesture());}
  @Override public boolean shouldOverrideUrlLoading(WebView v,String url){return navigate(v,url,false);}
  private boolean navigate(WebView v,String url,boolean explicitGesture){
-  if(chatUrl(url)){v.removeJavascriptInterface("Bonsai");return false;}
+  if(chatUrl(url)){
+   if(navigation!=null){navigation.open(url);return true;}
+   v.removeJavascriptInterface("Bonsai");return false;
+  }
   if("file:///android_asset/index.html".equals(url)&&!chatUrl(v.getUrl()))return false;
   // Source links are opened explicitly in the user's browser, not inside a privileged WebView.
   if(explicitGesture&&url!=null&&url.startsWith("https://"))try{v.getContext().startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}catch(RuntimeException ignored){}

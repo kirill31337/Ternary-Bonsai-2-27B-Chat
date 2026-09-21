@@ -5,11 +5,14 @@ import runpy,shutil,subprocess,os
 R=Path(__file__).resolve().parents[1];os.chdir(R);runpy.run_path(str(R/'make_api_stubs.py'))
 d=R/'build/extensions-host';shutil.rmtree(d,ignore_errors=True);d.mkdir(parents=True);shutil.copytree(R/'build/api-signatures',d/'src',dirs_exist_ok=True)
 P='com/prismml/bonsailocal/repair/'
-for f in (R/'java').rglob('*.java'):p=d/'src'/f.relative_to(R/'java');p.parent.mkdir(parents=True,exist_ok=True);shutil.copy(f,p)
+for f in (R/'java').rglob('*.java'):
+ if f.stem in ('RuntimeEnvironment','RuntimeService','RuntimeSnapshot','UiSession'):continue # tested in dedicated lifecycle harnesses
+ p=d/'src'/f.relative_to(R/'java');p.parent.mkdir(parents=True,exist_ok=True);shutil.copy(f,p)
 for f in (R/'tests/extensions').rglob('*.java'):p=d/'src'/f.relative_to(R/'tests/extensions');p.parent.mkdir(parents=True,exist_ok=True);shutil.copy(f,p)
 shutil.copy(R/'tests/jvm'/P/'Bridge.java',d/'src'/P)
 def put(name,body):
  p=d/'src'/(name+'.java');p.parent.mkdir(parents=True,exist_ok=True);p.write_text('package '+name.rsplit('/',1)[0].replace('/','.')+';\n'+body)
+put('com/prismml/bonsailocal/repair/RuntimeService', '''public class RuntimeService {public static final String START="start",STOP="stop",TEST="test";public static String error(){return "";}public static void request(android.content.Context c,String action){}}''')
 put('android/net/Uri', '''public class Uri {final String s;Uri(String u){s=u;}public static Uri parse(String s){return new Uri(s);}public String getScheme(){try{return new java.net.URI(s).getScheme();}catch(Exception e){return null;}}public String toString(){return s;}}''')
 put('android/content/Intent', '''public class Intent {public static final int FLAG_GRANT_READ_URI_PERMISSION=1,FLAG_ACTIVITY_NEW_TASK=268435456;public static final String CATEGORY_OPENABLE="android.intent.category.OPENABLE",ACTION_VIEW="android.intent.action.VIEW";public android.net.Uri[] uris;public int flags;public String category;private String action;private android.net.Uri data;public Intent(String a,android.net.Uri d){action=a;data=d;}public Intent(Context c,Class<?> x){}public Intent addCategory(String s){category=s;return this;}public Intent addFlags(int f){flags|=f;return this;}public Intent setAction(String a){action=a;return this;}public String getAction(){return action;}public Intent setData(android.net.Uri u){data=u;return this;}public android.net.Uri getData(){return data;}}''')
 put('android/app/Activity', '''public class Activity extends android.content.Context {public int pickerCalls,requestCode,externalCalls;public android.content.Intent lastIntent;public void startActivityForResult(android.content.Intent i,int request){pickerCalls++;requestCode=request;lastIntent=i;}public final void runOnUiThread(Runnable r){r.run();}public void startActivity(android.content.Intent i){externalCalls++;}}''')

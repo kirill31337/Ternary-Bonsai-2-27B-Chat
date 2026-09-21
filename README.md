@@ -15,6 +15,8 @@ vision, optional web tools and a local benchmark.
 ## Features
 
 - On-device 27B GGUF inference on Android ARM64.
+- Background model loading and inference with an ongoing notification.
+- Retained chat and controls across window recreation; Back opens model controls.
 - `PQ2_0` and `PTQ1_0` packs.
 - 4K–256K context presets, FP16/Q4 KV cache, configurable CPU threads.
 - Optional Q8 vision `mmproj` for image input.
@@ -25,7 +27,7 @@ vision, optional web tools and a local benchmark.
 - Local prompt/generation tokens-per-second benchmark.
 - Model weights are **not** bundled in the APK or repository.
 
-## Recommended start for 16 GB RAM
+## Starting settings
 
 `PQ2_0 · 16K context · FP16 KV · 4 generation threads / 8 prompt threads · reasoning off`
 

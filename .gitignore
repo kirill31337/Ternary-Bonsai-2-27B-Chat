@@ -1,4 +1,11 @@
 /build/
+/build-release.log
+/app/build/
+/app/smali/com/prismml/bonsailocal/repair/*.smali
+!/app/smali/com/prismml/bonsailocal/repair/MainActivity.smali
+!/app/smali/com/prismml/bonsailocal/repair/Bridge.smali
+!/app/smali/com/prismml/bonsailocal/repair/Report.smali
+!/app/smali/com/prismml/bonsailocal/repair/Click.smali
 /.cache/
 /app/lib/arm64-v8a/*.so
 /signing/*.keystore

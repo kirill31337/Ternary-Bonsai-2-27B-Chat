@@ -19,7 +19,7 @@ check('checkbox actually calls native facade',()=>{e.visionOn.checked=true;run('
 check('native vision error visibly restores saved setting',()=>{failure='busy';e.visionOn.checked=true;run('toggleVision()');assert(!e.visionOn.checked);assert(e.extensionAction.textContent.includes('busy'));failure=''});
 check('cancel outbound permission sends no configuration',()=>{consent=false;e.webMode.value='2';run('saveWeb(false)');assert.equal(calls.length,0)});
 check('explicit web permission passes mode provider key to native only',()=>{consent=true;e.webMode.value='1';e.webProvider.value='brave';e.webKey.value='fixture-secret';run('saveWeb(false)');assert.deepEqual(calls,[['web',1,'brave','fixture-secret',false]]);assert.equal(e.webKey.value,'');assert(lastConfirm.includes('поисков'))});
-check('key indicator does not contain actual key',()=>{ext.hasKey=true;ext.provider='brave';ext.mode=1;poll();assert(e.keyInfo.textContent.includes('Keystore'));assert(!e.keyInfo.textContent.includes('fixture-secret'))});
+check('key indicator does not contain actual key',()=>{ext.hasKey=true;ext.provider='brave';ext.mode=1;poll();assert(e.keyInfo.textContent.includes('сохранён'));assert(!e.keyInfo.textContent.includes('fixture-secret'))});
 check('explicit key deletion disables web and clears key, not models',()=>{run('saveWeb(true)');assert.deepEqual(calls,[['web',0,'brave','',true]])});
 check('web self-test requires explicit click',()=>{ext.mode=1;poll();assert.equal(calls.length,0);run('checkWeb()');assert.deepEqual(calls,[['testWeb']])});
 check('provider test output rendered as text not injected HTML',()=>{ext.test='<script>steal()</script>';poll();assert.equal(e.webResult.textContent,ext.test)});
