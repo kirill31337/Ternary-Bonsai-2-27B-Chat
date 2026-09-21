@@ -15,6 +15,11 @@ public final class BenchmarkTest {
    ok(Files.readString(dir.resolve("benchmarks.jsonl")).contains("\"busy\":false"),"saved completed result must not be marked busy");
    Files.writeString(dir.resolve("server.log"),"system_info: NEON=1 DOTPROD=1\nload_backend: loaded CPU backend from /lib/cpu.so\n");
    ok(LocalBenchmark.runtimeInfo(dir.toFile()).contains("DOTPROD"),"real engine backend details exposed");
+   Files.writeString(dir.resolve("server.log"),"load_tensors: Vulkan0 model buffer size = 500.25 MiB\n"+"unrelated log entry\n".repeat(10000)+"n_ctx_slot: earlier tail entry\n".repeat(24)+"error: fixture tail failure\n");
+   Files.writeString(dir.resolve("engine-test.log"),"Vulkan0: fixture GPU device\n");
+   String diagnostic=LocalBenchmark.runtimeInfo(dir.toFile());
+   ok(diagnostic.contains("500.25 MiB")&&diagnostic.contains("fixture tail failure"),"diagnostics retain startup evidence and recent failures in a long log");
+   ok(diagnostic.contains("fixture GPU device"),"device probe and model startup are both visible in diagnostics");
    server.removeContext("/completion");server.createContext("/completion",e->{e.getResponseHeaders().add("Location","https://example.com/not-used");e.sendResponseHeaders(302,-1);e.close();});
    LocalBenchmark.start(dir.toFile(),"{}");for(int i=0;i<100&&LocalBenchmark.isBusy();i++)Thread.sleep(30);
    ok(LocalBenchmark.status().contains("\"state\":\"error\"")&&LocalBenchmark.status().contains("302"),"redirect rejected, no external request");

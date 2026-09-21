@@ -35,9 +35,38 @@ public final class LocalBenchmark {
  public static String status(){return status(running.get());}
  private static String status(boolean active){return "{\"state\":"+quote(phase)+",\"busy\":"+active+",\"response\":"+quote(response)+",\"error\":"+quote(error)+",\"settings\":"+settings+",\"elapsedMs\":"+elapsed+"}";}
  public static String runtimeInfo(File files){
-  StringBuilder s=new StringBuilder("Backend и число GPU-слоёв ниже взяты из журнала движка. Частоты и термозащита не изменяются.\n");
+  StringBuilder s=new StringBuilder();
   try(BufferedReader r=new BufferedReader(new FileReader("/proc/meminfo"))){String l;while((l=r.readLine())!=null)if(l.startsWith("MemTotal:")||l.startsWith("MemAvailable:"))s.append(l).append('\n');}catch(IOException ex){s.append("Данные RAM недоступны\n");}
-  if(files!=null)try(RandomAccessFile f=new RandomAccessFile(new File(files,"server.log"),"r")){long start=Math.max(0,f.length()-65536);f.seek(start);byte[] b=new byte[(int)(f.length()-start)];f.readFully(b);String text=new String(b,"UTF-8");int n=0;for(String l:text.split("\n")){if(l.toLowerCase(java.util.Locale.ROOT).contains("vulkan")||l.contains("offload")||l.toLowerCase(java.util.Locale.ROOT).contains("error")||l.toLowerCase(java.util.Locale.ROOT).contains("failed")||l.contains("system_info")||l.contains("loaded CPU backend")||l.contains("buffer size")||l.contains("CPU_REPACK")||l.contains("n_threads")||l.contains("n_ctx")||l.contains("cache_type")){s.append(l.length()>500?l.substring(0,500):l).append('\n');if(++n>=48)break;}}if(n==0)s.append("Информация о backend появится после запуска модели.\n");}catch(IOException ex){s.append("Запустите модель, чтобы получить данные из server.log.\n");}
+  if(files!=null){
+   appendRuntimeLog(s,new File(files,"server.log"),"Загрузка модели / чат");
+   appendRuntimeLog(s,new File(files,"engine-test.log"),"Проверка движка");
+  }
   return s.toString();
+ }
+ private static void appendRuntimeLog(StringBuilder out,File file,String title){
+  if(!file.isFile())return;
+  out.append('\n').append(title).append(":\n");
+  try(RandomAccessFile f=new RandomAccessFile(file,"r")){
+   long size=f.length();int head=(int)Math.min(size,131072);
+   int lines=appendLogRange(out,f,0,head,48);
+   if(size>head){
+    out.append("… последние записи …\n");
+    long start=Math.max(head,size-32768);lines+=appendLogRange(out,f,start,(int)(size-start),16);
+   }
+   if(lines==0)out.append("Данные о backend пока не записаны.\n");
+  }catch(IOException ex){out.append("Журнал недоступен: ").append(ex.getMessage()).append('\n');}
+ }
+ private static int appendLogRange(StringBuilder out,RandomAccessFile file,long start,int length,int limit)throws IOException{
+  file.seek(start);byte[] bytes=new byte[length];file.readFully(bytes);
+  java.util.ArrayDeque<String> selected=new java.util.ArrayDeque<String>();
+  for(String line:new String(bytes,"UTF-8").split("\n")){
+   String lower=line.toLowerCase(java.util.Locale.ROOT);
+   if(lower.contains("vulkan")||lower.contains("offload")||lower.contains("error")||lower.contains("failed")||lower.contains("system_info")||lower.contains("loaded cpu backend")||lower.contains("buffer size")||lower.contains("cpu_repack")||lower.contains("n_threads")||lower.contains("n_ctx")||lower.contains("cache_type")){
+    if(selected.size()==limit){if(start==0)break;selected.removeFirst();}
+    selected.addLast(line.length()>500?line.substring(0,500):line);
+   }
+  }
+  for(String line:selected)out.append(line).append('\n');
+  return selected.size();
  }
 }

@@ -14,6 +14,7 @@
 - Python 3 + pytest
 - Node.js (for UI contract tests)
 - clang/lld with AArch64 Android target support
+- g++ with C++17 support (host logger regression)
 - Android SDK platform 35 or newer
 - Apktool 3.x
 - Android SDK build-tools 35.0.0 (`d8.jar` and `apksigner.jar`)
@@ -59,7 +60,7 @@ bash build_apk.sh
 bash tests/run_all.sh
 ```
 
-Output: `build/BonsaiLocal-1.2.0-arm64.apk`.
+Output: `build/BonsaiLocal-1.2.1-arm64.apk`.
 
 The APK targets API 35 (Android 15) and retains minimum API 28 (Android 9).
 `resources.arsc` must remain uncompressed and its ZIP payload must be 4-byte
@@ -70,6 +71,10 @@ For managed/UI-only updates with **unchanged native source**, set
 native libraries instead of recompiling the launcher. Set `PREVIOUS_APK` too
 to verify the update uses the same signing certificate. Do not use this option
 after native code changes.
+
+The JNI regression suite compiles the logger from the pinned Prism source in
+`.cache/vulkan/llama.cpp`. Set `PRISM_SOURCE` if that checkout is elsewhere.
+It verifies the real default/trace logging behavior as well as launcher behavior.
 
 Host tests cover lifecycle state transitions, retained screens and native
 integration. They do not substitute for Android device testing, especially

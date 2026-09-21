@@ -228,7 +228,7 @@ static int dispose_child(JNIEnv *e,int terminate) {
 static int spawn_child(JNIEnv *e,int test) {
     if(child){fail("Движок уже запущен. Сначала остановите его.");return 0;}
     char exe[2200],outpath[2200];snprintf(exe,sizeof(exe),"%s/libllama_server_exec.so",lib_path);
-    snprintf(outpath,sizeof(outpath),"%s/server.log",files_path);
+    snprintf(outpath,sizeof(outpath),"%s/%s",files_path,test?"engine-test.log":"server.log");
     int gpu=atomic_load(&gpu_layers);
     char ctx[24],th[16],tb[16],ngl[16],gpu_path[2200];
     snprintf(gpu_path,sizeof(gpu_path),"%s/libbonsai_vulkan.so",lib_path);
@@ -248,6 +248,12 @@ static int spawn_child(JNIEnv *e,int test) {
         "--temp",mode?"1.0":"0.7","--top-p",mode?"0.95":"0.80","--top-k","20","--min-p","0",
         "--presence-penalty",mode?"0.0":"1.5","--repeat-penalty","1.0"};
     int count=0;while(count<80&&args[count])count++;
+    if(gpu){
+        // Pinned Prism routes llama/ggml INFO through level 4, not the default 3.
+        // Without this the model can be ready but its GPU evidence is suppressed.
+        args[count++]="--log-verbosity";args[count++]="4";
+        args[count++]="--log-colors";args[count++]="off";
+    }
     if(!test&&atomic_load(&vision_enabled)){
         if(!complete_vision()){fail("Модуль изображений отсутствует или не прошёл проверку. Скачайте mmproj или отключите изображения.");return 0;}
         args[count++]="--mmproj";args[count++]=vision_path;args[count++]="--no-mmproj-offload";
@@ -365,7 +371,7 @@ static void *run(void *unused) {
                 if(m){last_exit=(*e)->CallIntMethod(e,child,m);jerr(e,"Process.exitValue");}
                 dispose_child(e,0);
                 if(child_is_test && last_exit==0){clear_error();atomic_store(&state,complete_model()?5:0);log_line("Runtime self-test passed, exit code 0. This is not a model inference test.");}
-                else {char msg[220];snprintf(msg,sizeof(msg),"llama-server завершился, код %d. Откройте «Диагностика»: подробности в server.log.",last_exit);fail(msg);}
+                else {char msg[220];snprintf(msg,sizeof(msg),"llama-server завершился, код %d. Откройте «Диагностика»: подробности в %s.",last_exit,child_is_test?"engine-test.log":"server.log");fail(msg);}
             }else if(!child_is_test && atomic_load(&state)==2 && (ticks%2)==0 && healthy(e)){
                 int actual=atomic_load(&gpu_layers)?read_gpu_offload():0;
                 atomic_store(&gpu_offloaded,actual);
@@ -418,7 +424,7 @@ JNIEXPORT void JNICALL Java_com_prismml_bonsailocal_repair_Bridge_init(JNIEnv *e
     atomic_store(&vision_enabled,0);atomic_store(&runtime_alive,0);
     atomic_store(&model_choice,0);atomic_store(&ctx_size,16384);atomic_store(&kv_q4,0);atomic_store(&threads,4);atomic_store(&batch_threads,8);atomic_store(&thinking,0);
     snprintf(log_path,sizeof(log_path),"%s/native.log",files_path);
-    char msg[240];snprintf(msg,sizeof(msg),"Bonsai Local 1.2.0 native init; page size=%d; Prism runtime 9a9394a",getpagesize());log_line(msg);
+    char msg[240];snprintf(msg,sizeof(msg),"Bonsai Local 1.2.1 native init; page size=%d; Prism runtime 9a9394a",getpagesize());log_line(msg);
     if((*e)->GetJavaVM(e,&vm)!=JNI_OK){fail("GetJavaVM failed");return;}
     app_context=(*e)->NewGlobalRef(e,context);if(jerr(e,"NewGlobalRef(Context)")||!app_context)return;
     atomic_store(&stop_flag,0);atomic_store(&command,0);clear_error();restore_id();atomic_store(&state,complete_model()?5:0);

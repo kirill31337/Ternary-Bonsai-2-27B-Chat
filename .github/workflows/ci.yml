@@ -50,9 +50,9 @@ jobs:
           SIGNING_KEYPASS: android
         run: |
           bash build_apk.sh
-          TEST_APK=build/BonsaiLocal-1.2.0-arm64.apk bash tests/run_all.sh
+          TEST_APK=build/BonsaiLocal-1.2.1-arm64.apk bash tests/run_all.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: BonsaiLocal-1.2.0-ci-arm64
-          path: build/BonsaiLocal-1.2.0-arm64.apk
+          name: BonsaiLocal-1.2.1-ci-arm64
+          path: build/BonsaiLocal-1.2.1-arm64.apk
           retention-days: 14

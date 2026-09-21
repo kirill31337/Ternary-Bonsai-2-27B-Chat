@@ -64,11 +64,11 @@ public class Bridge {
             Files.writeString(exe,"#!/bin/sh\necho self-test-only\nexit 0\n");exe.toFile().setExecutable(true);
             b.selfTest();awaitResult(b,0,0);
             ok(b.status().contains("\"exit\":0"),"successful subprocess self-test returns to idle");
-            ok(Files.readString(logs.resolve("server.log")).contains("self-test-only"),"subprocess stdout captured");
+            ok(Files.readString(logs.resolve("engine-test.log")).contains("self-test-only"),"self-test stdout captured separately");
             Files.writeString(exe,"#!/bin/sh\necho controlled-error >&2\nexit 7\n");
             b.selfTest();awaitResult(b,4,7);
             ok(b.status().contains("\"exit\":7"),"nonzero subprocess exit reported without killing the UI process");
-            ok(Files.readString(logs.resolve("server.log")).contains("controlled-error"),"subprocess stderr captured");
+            ok(Files.readString(logs.resolve("engine-test.log")).contains("controlled-error"),"self-test stderr captured separately");
             shutdown();
             // Sparse fake file is only a host lifecycle fixture, not model weights.
             Path model=ext.resolve("Ternary-Bonsai-2-27B-PTQ1_0.gguf");
