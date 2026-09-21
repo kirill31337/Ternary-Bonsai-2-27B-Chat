@@ -6,7 +6,7 @@ R=Path(__file__).resolve().parents[1];os.chdir(R);runpy.run_path(str(R/'make_api
 d=R/'build/extensions-host';shutil.rmtree(d,ignore_errors=True);d.mkdir(parents=True);shutil.copytree(R/'build/api-signatures',d/'src',dirs_exist_ok=True)
 P='com/prismml/bonsailocal/repair/'
 for f in (R/'java').rglob('*.java'):
- if f.stem in ('RuntimeEnvironment','RuntimeService','RuntimeSnapshot','UiSession'):continue # tested in dedicated lifecycle harnesses
+ if f.stem in ('RuntimeEnvironment','RuntimeService','RuntimeSnapshot','UiSession','WindowLayout'):continue # tested in dedicated lifecycle harnesses
  p=d/'src'/f.relative_to(R/'java');p.parent.mkdir(parents=True,exist_ok=True);shutil.copy(f,p)
 for f in (R/'tests/extensions').rglob('*.java'):p=d/'src'/f.relative_to(R/'tests/extensions');p.parent.mkdir(parents=True,exist_ok=True);shutil.copy(f,p)
 shutil.copy(R/'tests/jvm'/P/'Bridge.java',d/'src'/P)

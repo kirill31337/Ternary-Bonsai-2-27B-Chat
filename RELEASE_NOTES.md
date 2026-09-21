@@ -1,9 +1,9 @@
-# Bonsai Local 1.1.0
+# Bonsai Local 1.1.1
 
-- Model loading and inference run in a foreground service with an ongoing notification and Stop action.
-- Backgrounding or recreating the window retains the current chat document and stream.
-- Back from chat opens model controls; returning to chat preserves the conversation.
-- Removed device-specific recommendations and shortened the interface.
-- Native runtime, package name, model storage and update signing certificate remain unchanged.
+- Targets Android 15 (API 35), removing the obsolete-target cause of the Play Protect warning.
+- Keeps chat, controls and diagnostics clear of system bars, display cutouts and the keyboard on Android 15+.
+- Pauses model downloads safely when Android 15 ends the dataSync foreground-service time budget.
+- Preserves active chat retention and the separate foreground service for model loading and inference.
+- Keeps Android 9+ ARM64 support, package identity, signing certificate, model storage and native runtime.
 
-Android 9+ ARM64. Model weights are downloaded separately. Force-stop or OS process termination cannot preserve a model in RAM. Host regression suites and APK signing/packaging checks passed; physical-device background behavior has not been tested in this build environment.
+Host regression suites and APK signing/packaging checks passed. Device installation, keyboard layout and the final Play Protect verdict require testing on a phone; other Play Protect checks remain independent of the target SDK.

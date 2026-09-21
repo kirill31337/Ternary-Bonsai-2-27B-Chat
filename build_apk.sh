@@ -32,7 +32,7 @@ with zipfile.ZipFile('build/java-only.apk','w') as z:
 PY
   java -jar "$APKTOOL_JAR" d -r -f build/java-only.apk -o build/java-decoded
   # Generated adapters are separate from MainActivity, Bridge, and diagnostics.
-  find app/smali/com/prismml/bonsailocal/repair \( -name 'Transfer*.smali' -o -name 'ModelCatalog*.smali' -o -name 'RuntimeOptions*.smali' -o -name 'LocalBenchmark*.smali' -o -name 'ModelFiles*.smali' -o -name 'MiniJson*.smali' -o -name 'WebNet*.smali' -o -name 'WebTools*.smali' -o -name 'McpServer*.smali' -o -name 'Extensions*.smali' -o -name 'ChatBootstrap*.smali' -o -name 'BonsaiChromeClient*.smali' -o -name 'KeyVault*.smali' -o -name 'LocalWebClient*.smali' -o -name 'RuntimeService*.smali' -o -name 'RuntimeEnvironment*.smali' -o -name 'RuntimeSnapshot*.smali' -o -name 'UiSession*.smali' \) -delete
+  find app/smali/com/prismml/bonsailocal/repair \( -name 'Transfer*.smali' -o -name 'ModelCatalog*.smali' -o -name 'RuntimeOptions*.smali' -o -name 'LocalBenchmark*.smali' -o -name 'ModelFiles*.smali' -o -name 'MiniJson*.smali' -o -name 'WebNet*.smali' -o -name 'WebTools*.smali' -o -name 'McpServer*.smali' -o -name 'Extensions*.smali' -o -name 'ChatBootstrap*.smali' -o -name 'BonsaiChromeClient*.smali' -o -name 'KeyVault*.smali' -o -name 'LocalWebClient*.smali' -o -name 'RuntimeService*.smali' -o -name 'RuntimeEnvironment*.smali' -o -name 'RuntimeSnapshot*.smali' -o -name 'UiSession*.smali' -o -name 'WindowLayout*.smali' \) -delete
   cp build/java-decoded/smali/com/prismml/bonsailocal/repair/*.smali app/smali/com/prismml/bonsailocal/repair/
 fi
 # Rebuild the small launcher; keep all Prism inference libraries byte-for-byte.
@@ -62,6 +62,6 @@ if [[ ! -f "$KEYSTORE" ]]; then
   echo "Set SIGNING_KEYSTORE/SIGNING_* or create an ephemeral test key for CI." >&2
   exit 2
 fi
-java -cp "$ANDROID_TOOLS_JAR:build/tools" SignApk build/unsigned.apk build/BonsaiLocal-1.1.0-arm64.apk "$KEYSTORE" "$ALIAS" "$STOREPASS" "$KEYPASS" "$PREV"
-TEST_APK=build/BonsaiLocal-1.1.0-arm64.apk python3 -m pytest -q
+java -cp "$ANDROID_TOOLS_JAR:build/tools" SignApk build/unsigned.apk build/BonsaiLocal-1.1.1-arm64.apk "$KEYSTORE" "$ALIAS" "$STOREPASS" "$KEYPASS" "$PREV"
+TEST_APK=build/BonsaiLocal-1.1.1-arm64.apk python3 -m pytest -q
 node tests/ui_state_test.cjs

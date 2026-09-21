@@ -14,7 +14,7 @@ details.panel>summary{cursor:pointer;font-size:16px;font-weight:650;color:#cbd6e
 </style>
 </head>
 <body><main>
-<header class="topbar"><div class="title"><h1>Bonsai Local</h1><p>Локальный ИИ</p></div><div class="version">1.1.0</div></header>
+<header class="topbar"><div class="title"><h1>Bonsai Local</h1><p>Локальный ИИ</p></div><div class="version">1.1.1</div></header>
 <section class="panel"><div class="panel-head"><h2>Модель</h2></div>
 <div class="field"><select id="model" aria-label="Формат модели" onchange="saveSettings(false)"><option value="1">PQ2_0 · 7,21 ГБ</option><option value="0">PTQ1_0 · 5,95 ГБ</option></select></div><small id="modelInfo"></small>
 <div class="actions"><button class="secondary" id="pick" onclick="chooseLocal()">Выбрать скачанный GGUF</button><button class="primary" id="download" onclick="confirmDownload()">Скачать модель</button></div><button id="pause" class="secondary" onclick="action('pause')" hidden>Пауза</button>
@@ -35,7 +35,7 @@ details.panel>summary{cursor:pointer;font-size:16px;font-weight:650;color:#cbd6e
 <div class="file-row"><small id="file0"></small><button class="danger" id="delete0" onclick="removeFile(0)">Удалить PTQ1_0</button></div><div class="file-row"><small id="file1"></small><button class="danger" id="delete1" onclick="removeFile(1)">Удалить PQ2_0</button></div><div class="file-row"><small id="file2"></small><button class="danger" id="delete2" onclick="removeFile(2)">Удалить mmproj</button></div>
 </details><div id="extensionAction" class="info"></div>
 <details class="panel"><summary>Диагностика</summary><button class="secondary" id="test" onclick="action('selfTest')">Проверить движок</button><button id="bench" class="secondary" onclick="startBenchmark()" disabled>Замерить скорость</button><div id="benchResult" class="info"></div><details class="advanced"><summary>Журнал и память</summary><button class="secondary" onclick="showRuntime()">Обновить</button><pre id="runtime" class="codebox"></pre></details></details>
-<footer class="footer">Bonsai Local 1.1.0 · независимый клиент<br>Bonsai / Prism ML · llama.cpp</footer>
+<footer class="footer">Bonsai Local 1.1.1 · независимый клиент<br>Bonsai / Prism ML · llama.cpp</footer>
 </main>
 <script>
 let webDirty=false,webFormFilled=false;

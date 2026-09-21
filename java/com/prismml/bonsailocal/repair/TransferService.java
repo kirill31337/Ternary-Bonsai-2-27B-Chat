@@ -36,7 +36,14 @@ public final class TransferService extends Service {
   }catch(Throwable e){Transfers.fail(e);finishTransfer(startId);}
   return START_NOT_STICKY;
  }
- private void finishTransfer(int id){handler.removeCallbacks(ticker);if(wake!=null&&wake.isHeld())wake.release();wake=null;foreground=false;stopForeground(true);stopSelf();Transfers.end();worker=null;}
+ private void stopTransferService(){handler.removeCallbacks(ticker);if(wake!=null&&wake.isHeld())wake.release();wake=null;foreground=false;stopForeground(true);stopSelf();}
+ private void finishTransfer(int id){stopTransferService();Transfers.end();worker=null;}
+ @Override public void onTimeout(int startId,int fgsType){
+  // API 35 limits background dataSync time. Stop the service immediately, even
+  // if the worker is waiting on network I/O; its finally block releases the
+  // single-transfer reservation after it has safely stopped writing the file.
+  Transfers.pause();stopTransferService();
+ }
  @Override public void onDestroy(){handler.removeCallbacks(ticker);if(worker!=null&&worker.isAlive())Transfers.pause();if(wake!=null&&wake.isHeld())wake.release();foreground=false;super.onDestroy();}
  @Override public IBinder onBind(Intent i){return null;}
 }

@@ -19,11 +19,15 @@ put('android/content/Context', '''public class Context {public Context getApplic
 put('android/content/MutableContextWrapper', '''public class MutableContextWrapper extends Context {public Context base;public MutableContextWrapper(Context c){base=c;}public void setBaseContext(Context c){base=c;}}''')
 put('android/os/Build', '''public class Build {public static class VERSION {public static int SDK_INT=35;}}''')
 put('android/view/ViewParent', 'public interface ViewParent {}')
-put('android/view/View', '''public class View {public ViewParent parent; public ViewParent getParent(){return parent;}}''')
-put('android/view/ViewGroup', '''public class ViewGroup extends View implements ViewParent {public void removeView(View v){v.parent=null;}}''')
+put('android/graphics/Insets', 'public class Insets {public final int left,top,right,bottom;public Insets(int l,int t,int r,int b){left=l;top=t;right=r;bottom=b;}}')
+put('android/view/WindowInsets', '''public class WindowInsets {public static final WindowInsets CONSUMED=new WindowInsets(0,0,0,0);private android.graphics.Insets value;public WindowInsets(int l,int t,int r,int b){value=new android.graphics.Insets(l,t,r,b);}public android.graphics.Insets getInsets(int types){if(types!=7)throw new AssertionError("Must include bars, cutout and IME");return value;}public static final class Type {public static int systemBars(){return 1;}public static int displayCutout(){return 2;}public static int ime(){return 4;}}}''')
+put('android/view/View', '''public class View {public ViewParent parent;public int left,top,right,bottom;public OnApplyWindowInsetsListener listener;public ViewParent getParent(){return parent;}public interface OnApplyWindowInsetsListener{WindowInsets onApplyWindowInsets(View v,WindowInsets i);}public void setOnApplyWindowInsetsListener(OnApplyWindowInsetsListener l){listener=l;}public void setPadding(int l,int t,int r,int b){left=l;top=t;right=r;bottom=b;}public void requestApplyInsets(){}}''')
+put('android/view/ViewGroup', '''public class ViewGroup extends View implements ViewParent {public static class LayoutParams {public static final int MATCH_PARENT=-1;public LayoutParams(int w,int h){}}public void removeView(View v){v.parent=null;}}''')
+put('android/widget/FrameLayout', '''public class FrameLayout extends android.view.ViewGroup {public android.view.View child;public FrameLayout(android.content.Context c){}public void addView(android.view.View v,android.view.ViewGroup.LayoutParams p){if(v.parent!=null)throw new IllegalStateException("still attached");child=v;v.parent=this;}}''')
+put('android/app/Activity', '''public class Activity extends android.content.Context {public android.view.View root;public android.webkit.WebView view;public void setContentView(android.view.View v){root=v;android.view.View content=v instanceof android.widget.FrameLayout?((android.widget.FrameLayout)v).child:v;if(content instanceof android.webkit.WebView)view=(android.webkit.WebView)content;v.parent=new android.view.ViewGroup();}public void runOnUiThread(Runnable r){r.run();}}''')
 put('android/webkit/WebSettings', '''public class WebSettings {public void setJavaScriptEnabled(boolean b){}public void setDomStorageEnabled(boolean b){}public void setAllowFileAccessFromFileURLs(boolean b){}public void setAllowUniversalAccessFromFileURLs(boolean b){}public void setAllowContentAccess(boolean b){}}''')
 put('android/webkit/WebView', '''public class WebView extends android.view.View {public static final int RENDERER_PRIORITY_IMPORTANT=2;public static int created;public int loads;public String url;public boolean destroyed,bridged;public android.content.Context context;public WebView(android.content.Context c){context=c;created++;}public WebSettings getSettings(){return new WebSettings();}public void setWebViewClient(Object o){}public void setWebChromeClient(Object o){}public void addJavascriptInterface(Object o,String n){bridged=true;}public void removeJavascriptInterface(String n){}public void loadUrl(String u){url=u;loads++;}public String getUrl(){return url;}public void setRendererPriorityPolicy(int p,boolean waived){}public void onResume(){}public void destroy(){destroyed=true;}}''')
-put(PKG+'/MainActivity', '''public class MainActivity extends android.content.Context {public android.webkit.WebView view;public void setContentView(android.view.View v){if(v.parent!=null)throw new IllegalStateException("still attached");view=(android.webkit.WebView)v;v.parent=new android.view.ViewGroup();}public void runOnUiThread(Runnable r){r.run();}}''')
+put(PKG+'/MainActivity', 'public class MainActivity extends android.app.Activity {}')
 put(PKG+'/TransferFacade', '''public class TransferFacade {public MainActivity owner;public TransferFacade(MainActivity a){owner=a;}public void attach(MainActivity a){owner=a;}}''')
 put(PKG+'/BonsaiChromeClient', '''public class BonsaiChromeClient {public MainActivity owner;public BonsaiChromeClient(MainActivity a){owner=a;}public void attach(MainActivity a){owner=a;}public static void cancel(MainActivity a){}}''')
 put(PKG+'/Extensions', 'public class Extensions {public static String setup="disabled";public static String bootstrapHtml(){return setup;}}')
@@ -32,6 +36,14 @@ put(PKG+'/BackgroundHostTest', '''public class BackgroundHostTest {
  static int n;static void ok(boolean b,String message){if(!b)throw new AssertionError(message);n++;}
  public static void main(String[] args){
   MainActivity first=new MainActivity();android.webkit.WebView management=UiSession.open(first);
+  ok(first.root.listener!=null,"Android 15 must apply safe content insets");
+  android.view.View root=first.root;
+  ok(root.listener.onApplyWindowInsets(root,new android.view.WindowInsets(0,28,0,24))==android.view.WindowInsets.CONSUMED,"Root must consume applied insets once");
+  ok(root.top==28&&root.bottom==24,"System bars overlap content");
+  root.listener.onApplyWindowInsets(root,new android.view.WindowInsets(0,28,0,360));
+  ok(root.bottom==360,"Keyboard covers composer");
+  root.listener.onApplyWindowInsets(root,new android.view.WindowInsets(44,0,24,0));
+  ok(root.left==44&&root.top==0&&root.right==24&&root.bottom==0,"Rotation/cutout or keyboard hide retains stale padding");
   UiSession.showChat(first,"http://127.0.0.1:18080/bonsai-connect");android.webkit.WebView page=first.view;
   ok(management!=page&&management.bridged&&!page.bridged,"Chat must never share the privileged management document");
   page.loadUrl("http://127.0.0.1:18080/#/chat/existing-conversation");int loads=page.loads;
@@ -63,10 +75,14 @@ put(PKG+'/BackgroundHostTest', '''public class BackgroundHostTest {
   ok(RuntimeSnapshot.parse("{\\"state\\":4,\\"pending\\":0,\\"alive\\":true}").active(),"Live failed process lost protection");
   ok(!RuntimeSnapshot.parse("{\\"state\\":5,\\"pending\\":0,\\"alive\\":false}").active(),"Idle model leaked service");
   ok(!RuntimeSnapshot.parse("{\\"state\\":4,\\"pending\\":0,\\"alive\\":false}").active(),"Terminated runtime leaked service");
+  android.os.Build.VERSION.SDK_INT=28;MainActivity legacy=new MainActivity();
+  ok(UiSession.open(legacy)==page&&legacy.root==page,"Android 9 must keep its original window handling and retained chat");
+  android.os.Build.VERSION.SDK_INT=35;MainActivity diagnostic=new MainActivity();android.view.View nativeView=new android.view.View();WindowLayout.setContentView(diagnostic,nativeView);
+  ok(diagnostic.root instanceof android.widget.FrameLayout&&((android.widget.FrameLayout)diagnostic.root).child==nativeView&&diagnostic.root.listener!=null,"Native diagnostics need the same inset handling");
   System.out.println(n+" background lifecycle assertions passed; Android boundaries simulated");
  }
 }''')
-for name in ('UiSession', 'RuntimeSnapshot', 'MiniJson'):
+for name in ('UiSession', 'RuntimeSnapshot', 'MiniJson', 'WindowLayout'):
     shutil.copy(ROOT/'java'/PKG/(name+'.java'), SRC/PKG)
 classes=BUILD/'classes';classes.mkdir(parents=True)
 subprocess.run(['javac','--release','8','-d',str(classes)]+[str(p) for p in SRC.rglob('*.java')],check=True)

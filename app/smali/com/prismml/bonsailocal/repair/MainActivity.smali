@@ -74,7 +74,7 @@
 
     invoke-virtual {v1, v0}, Landroid/widget/ScrollView;->addView(Landroid/view/View;)V
 
-    invoke-virtual {p0, v1}, Landroid/app/Activity;->setContentView(Landroid/view/View;)V
+    invoke-static {p0, v1}, Lcom/prismml/bonsailocal/repair/WindowLayout;->setContentView(Landroid/app/Activity;Landroid/view/View;)V
 
     return-object v0
 .end method

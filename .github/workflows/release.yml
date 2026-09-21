@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag, e.g. v1.1.0'
+        description: 'Release tag, e.g. v1.1.1'
         required: true
-        default: 'v1.1.0'
+        default: 'v1.1.1'
 permissions:
   contents: write
 jobs:
@@ -53,5 +53,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          sha256sum build/BonsaiLocal-1.1.0-arm64.apk > build/BonsaiLocal-1.1.0-arm64.apk.sha256
-          gh release create '${{ inputs.tag }}' build/BonsaiLocal-1.1.0-arm64.apk build/BonsaiLocal-1.1.0-arm64.apk.sha256 --title 'Bonsai Local 1.1.0' --notes-file RELEASE_NOTES.md
+          sha256sum build/BonsaiLocal-1.1.1-arm64.apk > build/BonsaiLocal-1.1.1-arm64.apk.sha256
+          gh release create '${{ inputs.tag }}' build/BonsaiLocal-1.1.1-arm64.apk build/BonsaiLocal-1.1.1-arm64.apk.sha256 --title 'Bonsai Local 1.1.1' --notes-file RELEASE_NOTES.md

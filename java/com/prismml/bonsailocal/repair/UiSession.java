@@ -38,7 +38,7 @@ public final class UiSession {
         if (web.getParent() instanceof ViewGroup) ((ViewGroup)web.getParent()).removeView(web);
         context.setBaseContext(activity); owner = new WeakReference<>(activity);
         facade.attach(activity); chrome.attach(activity);
-        activity.setContentView(web); web.onResume();
+        WindowLayout.setContentView(activity, web); web.onResume();
         return web;
     }
     private static WebView create() {

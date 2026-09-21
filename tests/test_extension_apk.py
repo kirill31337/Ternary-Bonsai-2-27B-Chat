@@ -8,7 +8,7 @@ APK=Path(os.environ.get('TEST_APK',R/'build/BonsaiLocal-1.0.0-arm64.apk'))
 def test_new_web_and_vision_adapters_are_real_packaged_classes():
  with zipfile.ZipFile(APK) as z:
   definitions=dex_classes(z.read('classes.dex'))
-  for c in ('McpServer','WebNet','WebTools','MiniJson','Extensions','KeyVault','ChatBootstrap','ModelFiles','BonsaiChromeClient','LocalWebClient','RuntimeEnvironment','RuntimeService','RuntimeSnapshot','UiSession'):
+  for c in ('McpServer','WebNet','WebTools','MiniJson','Extensions','KeyVault','ChatBootstrap','ModelFiles','BonsaiChromeClient','LocalWebClient','RuntimeEnvironment','RuntimeService','RuntimeSnapshot','UiSession','WindowLayout'):
    assert 'Lcom/prismml/bonsailocal/repair/'+c+';' in definitions,c
   assert not any('Test;' in c or 'Fixture;' in c or 'Dump;' in c for c in definitions)
   assert not any(c.startswith('Ljavax/') or c.startswith('Ljava/') or c.startswith('Landroid/') for c in definitions)
