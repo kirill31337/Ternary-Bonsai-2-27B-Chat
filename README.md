@@ -8,6 +8,15 @@ Bonsai Local is an independent Android client for Prism ML's
 pinned PrismML fork of llama.cpp and adds model management, resumable downloads,
 vision, optional web tools and a local benchmark.
 
+## Download APK
+
+**[Download Bonsai Local 1.1.0 for Android · ARM64 · 62 MiB](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases/download/1.1.0/BonsaiLocal-1.1.0-arm64.apk)**
+
+[Latest release](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases/latest) · [All versions](https://github.com/kirill31337/Ternary-Bonsai-2-27B-Chat/releases) · [Русский](README_RU.md)
+
+Requires Android 9 or newer and an ARM64 device. Install the APK, then download
+or import a model inside the app. Model weights are downloaded separately.
+
 > **Unofficial community project.** Not affiliated with or endorsed by Prism ML,
 > ggml-org, Alibaba/Qwen, Hugging Face, DuckDuckGo or Brave. Product/model names
 > are used only to describe compatibility and origin.
@@ -34,7 +43,7 @@ vision, optional web tools and a local benchmark.
 Longer context and Q4 KV are available but trade speed against memory and may
 behave differently by device and workload.
 
-## Downloads
+## Model downloads
 
 The app downloads model files directly from the pinned publisher repository on
 Hugging Face only after the user requests it and verifies size/SHA-256.
