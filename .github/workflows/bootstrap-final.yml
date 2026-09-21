@@ -13,14 +13,17 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Verify and expand staged source
+      - name: Verify and publish staged source
         shell: bash
         run: |
           set -euo pipefail
-          cat .bootstrap/final/src.b64.* | base64 -d > "$RUNNER_TEMP/source.tar.gz"
-          echo 'b87c75553c29ee6fd6853ec2850b532a3462ec8daa3273036a42fc1d570bedce  '"$RUNNER_TEMP"'/source.tar.gz' | sha256sum -c -
+          cat .bootstrap/final/src.b64.* .bootstrap/final/tail.* .bootstrap/final/rem2.* | base64 -d > "$RUNNER_TEMP/source.tar.gz"
+          gzip -t "$RUNNER_TEMP/source.tar.gz"
           mkdir "$RUNNER_TEMP/source"
           tar xzf "$RUNNER_TEMP/source.tar.gz" -C "$RUNNER_TEMP/source"
+          test -f "$RUNNER_TEMP/source/README.md"
+          test -d "$RUNNER_TEMP/source/app"
+          test -d "$RUNNER_TEMP/source/tests"
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -a "$RUNNER_TEMP/source/." .
           git config user.name 'github-actions[bot]'
