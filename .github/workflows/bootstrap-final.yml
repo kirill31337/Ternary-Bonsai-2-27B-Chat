@@ -13,17 +13,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Verify and publish staged source
+      - name: Verify and expand staged source
         shell: bash
         run: |
           set -euo pipefail
-          cat .bootstrap/final/src.b64.* .bootstrap/final/tail.* .bootstrap/final/rem2.* | base64 -d > "$RUNNER_TEMP/source.tar.gz"
-          gzip -t "$RUNNER_TEMP/source.tar.gz"
+          cat             .bootstrap/final/src.b64.00             .bootstrap/final/src.b64.01             .bootstrap/final/tail.000             .bootstrap/final/tail.001             .bootstrap/final/tail.002             .bootstrap/final/tail.003             .bootstrap/final/rem2.000             .bootstrap/final/rem2.001             .bootstrap/final/rem2.002             .bootstrap/final/rem2.003             .bootstrap/final/rem2.004             .bootstrap/final/rem2.005             .bootstrap/final/rem2.006             .bootstrap/final/rem2.007             | base64 -d > "$RUNNER_TEMP/source.tar.gz"
+          echo '0442bf66e561da780676e1848d1987bfc6e61b22a2592f2d2621087487535674  '"$RUNNER_TEMP"'/source.tar.gz' | sha256sum -c -
           mkdir "$RUNNER_TEMP/source"
           tar xzf "$RUNNER_TEMP/source.tar.gz" -C "$RUNNER_TEMP/source"
-          test -f "$RUNNER_TEMP/source/README.md"
-          test -d "$RUNNER_TEMP/source/app"
-          test -d "$RUNNER_TEMP/source/tests"
+          test -f "$RUNNER_TEMP/source/app/AndroidManifest.xml"
+          test -f "$RUNNER_TEMP/source/.github/workflows/ci.yml"
+          test -f "$RUNNER_TEMP/source/LICENSE"
+          test ! -e "$RUNNER_TEMP/source/.bootstrap"
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -a "$RUNNER_TEMP/source/." .
           git config user.name 'github-actions[bot]'
