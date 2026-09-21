@@ -13,6 +13,7 @@ public class Bridge {
     public native void stop();
     public native void selfTest();
     public native boolean configureOptions(int model,int context,boolean q4,int threads,int batchThreads,int thinking);
+    public native boolean configureRuntime(int model,int context,boolean q4,int threads,int batchThreads,int thinking,int gpuLayers);
     static int passed;
     static void ok(boolean b,String name) {
         if(!b)throw new AssertionError(name);

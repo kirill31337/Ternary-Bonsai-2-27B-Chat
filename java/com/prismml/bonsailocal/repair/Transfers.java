@@ -32,7 +32,7 @@ public final class Transfers {
  public static synchronized boolean selectAsset(int id){ModelCatalog.get(id);if(isBusy())return false;assetIndex=id;engine=fresh();failure="";return true;}
  public static synchronized void resetAfterDelete(){if(isBusy())throw new IllegalStateException("Передача ещё идёт");assetIndex=options.modelIndex;engine=fresh();failure="";}
  public static int assetIndex(){return assetIndex;}
- private static boolean applyNative(Bridge b,RuntimeOptions o){return b.configureOptions(o.modelIndex,o.ctxSize,o.kvQ4,o.threads,o.batchThreads,o.thinking);}
+ private static boolean applyNative(Bridge b,RuntimeOptions o){return b.configureRuntime(o.modelIndex,o.ctxSize,o.kvQ4,o.threads,o.batchThreads,o.thinking,o.gpuLayers);}
  public static synchronized boolean restoreRuntime(Bridge b){return applyNative(b,options);}
  public static synchronized boolean updateOptions(RuntimeOptions next,Bridge bridge)throws IOException{
   if(isBusy())return false;

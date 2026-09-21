@@ -16,3 +16,6 @@
 .DS_Store
 __pycache__/
 *.pyc
+
+/app/AndroidManifest.xml.orig
+/app/assets/vulkan-runtime.json

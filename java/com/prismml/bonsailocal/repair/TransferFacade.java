@@ -8,8 +8,11 @@ public final class TransferFacade {
  private MainActivity owner(){return activity.get();}
  @JavascriptInterface public String status(){return "{\"backgroundError\":"+MiniJson.write(RuntimeService.error())+",\"engine\":"+nativeBridge.status()+",\"transfer\":"+Transfers.json()+",\"hasModel\":"+Transfers.readyFile()+",\"options\":"+Transfers.options().json()+",\"models\":"+Transfers.modelsJson()+",\"benchmark\":"+LocalBenchmark.status()+",\"extensions\":"+Extensions.status()+"}";}
  @JavascriptInterface public String configure(int m,int ctx,boolean q4,int t,int tb,int reason){
+  return configureRuntime(m,ctx,q4,t,tb,reason,0);
+ }
+ @JavascriptInterface public String configureRuntime(int m,int ctx,boolean q4,int t,int tb,int reason,int gpuLayers){
   try{if(LocalBenchmark.isBusy())return "Сначала дождитесь завершения замера или остановите его.";
-   return Transfers.updateOptions(new RuntimeOptions(m,ctx,q4,t,tb,reason),nativeBridge)?"":"Сначала остановите движок или дождитесь завершения передачи.";
+   return Transfers.updateOptions(new RuntimeOptions(m,ctx,q4,t,tb,reason,gpuLayers),nativeBridge)?"":"Сначала остановите движок или дождитесь завершения передачи.";
   }catch(Exception e){return e.toString();}
  }
  @JavascriptInterface public void start(){requestRuntime(RuntimeService.START);}

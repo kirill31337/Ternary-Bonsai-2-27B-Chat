@@ -27,6 +27,7 @@ or import a model inside the app. Model weights are downloaded separately.
 - Background model loading and inference with an ongoing notification.
 - Retained chat and controls across window recreation; Back opens model controls.
 - `PQ2_0` and `PTQ1_0` packs.
+- Optional experimental Vulkan GPU offload for `PTQ1_0`; CPU remains the default.
 - 4K–256K context presets, FP16/Q4 KV cache, configurable CPU threads.
 - Optional Q8 vision `mmproj` for image input.
 - Optional `web_search` + `web_fetch` via a loopback MCP bridge.
@@ -42,6 +43,18 @@ or import a model inside the app. Model weights are downloaded separately.
 
 Longer context and Q4 KV are available but trade speed against memory and may
 behave differently by device and workload.
+
+### Experimental GPU (1.2.0)
+
+Before loading a model, select **PTQ1_0 → GPU · Vulkan → 8 layers**.
+You can also select 16, 32 or all layers. PQ2_0 currently uses CPU.
+The app requires Vulkan model and compute buffers before declaring GPU startup
+ready; the displayed layer count is the engine's report. Some operations can
+still run on CPU. If loading fails, stop the runtime and turn GPU off.
+
+Use the local benchmark to compare CPU and GPU with the same model and context.
+Device compatibility and speedup are experimental; no phone GPU benchmark is
+claimed for this release.
 
 ## Model downloads
 

@@ -22,6 +22,9 @@
 .method public native configureOptions(IIZIII)Z
 .end method
 
+.method public native configureRuntime(IIZIIII)Z
+.end method
+
 .method public native selfTest()V
     .annotation runtime Landroid/webkit/JavascriptInterface;
     .end annotation

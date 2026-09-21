@@ -9,7 +9,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -22,12 +22,20 @@ jobs:
           packages: 'platform-tools'
       - name: Install build inputs
         run: |
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;29.0.14206865'
           python3 -m pip install -r requirements-dev.txt
           mkdir -p build
           curl -fL --retry 3 https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar -o build/apktool.jar
           echo 'dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  build/apktool.jar' | sha256sum -c -
           bash scripts/fetch_prism_runtime.sh
+          export ANDROID_NDK="$ANDROID_HOME/ndk/29.0.14206865"
+          export VULKAN_SDK_VERSION=1.4.357.1
+          mkdir -p "$RUNNER_TEMP/vulkan-sdk"
+          curl -fL --retry 3 "https://sdk.lunarg.com/sdk/download/$VULKAN_SDK_VERSION/linux/vulkan_sdk.tar.xz" -o "$RUNNER_TEMP/vulkan.tar.xz"
+          tar -xJf "$RUNNER_TEMP/vulkan.tar.xz" -C "$RUNNER_TEMP/vulkan-sdk" --strip-components=1
+          export VULKAN_SDK="$RUNNER_TEMP/vulkan-sdk/x86_64"
+          export LD_LIBRARY_PATH="$VULKAN_SDK/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          bash scripts/build_vulkan_runtime.sh
       - name: Create disposable CI signing key
         run: |
           bash scripts/create_test_keystore.sh "$RUNNER_TEMP/ci-test.jks"
@@ -42,9 +50,9 @@ jobs:
           SIGNING_KEYPASS: android
         run: |
           bash build_apk.sh
-          TEST_APK=build/BonsaiLocal-1.1.2-arm64.apk bash tests/run_all.sh
+          TEST_APK=build/BonsaiLocal-1.2.0-arm64.apk bash tests/run_all.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: BonsaiLocal-1.1.2-ci-arm64
-          path: build/BonsaiLocal-1.1.2-arm64.apk
+          name: BonsaiLocal-1.2.0-ci-arm64
+          path: build/BonsaiLocal-1.2.0-arm64.apk
           retention-days: 14

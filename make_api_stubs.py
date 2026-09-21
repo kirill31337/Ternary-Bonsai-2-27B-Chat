@@ -25,7 +25,7 @@ s={
 'android/webkit/JavascriptInterface':'''@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME) @java.lang.annotation.Target(java.lang.annotation.ElementType.METHOD) public @interface JavascriptInterface {}''',
 'android/R':'''public final class R { public static final class drawable {public static final int stat_sys_download=17301633,ic_media_pause=17301539;} }''',
 'com/prismml/bonsailocal/repair/MainActivity':'''public class MainActivity extends android.app.Activity {public void pickModel(){} public void showError(Throwable e){} }''',
-'com/prismml/bonsailocal/repair/Bridge':'''public class Bridge {public native String status();public native void start();public native void stop();public native void selfTest();public native boolean configureOptions(int model,int ctx,boolean q4,int t,int tb,int reasoning);}''',
+'com/prismml/bonsailocal/repair/Bridge':'''public class Bridge {public native String status();public native void start();public native void stop();public native void selfTest();public native boolean configureOptions(int model,int ctx,boolean q4,int t,int tb,int reasoning);public native boolean configureRuntime(int model,int ctx,boolean q4,int t,int tb,int reasoning,int gpuLayers);}''',
 }
 
 s['android/content/Context']=s['android/content/Context'].replace('public Context getApplicationContext()', 'public void startActivity(Intent i){} public Context getApplicationContext()')

@@ -30,11 +30,31 @@ def test_native_pq_context_thread_thinking_arguments_packaged():
   for s in (b'PQ2_0.gguf',b'--threads-batch',b'--reasoning-budget',b'--chat-template-kwargs',b'--flash-attn',b'--cache-type-k',b'--cache-type-v'):
    assert s in b,s
 
-def test_no_gpu_claim_or_remote_benchmark_endpoint():
+def test_benchmark_uses_only_local_runtime():
  s=(R/'java/com/prismml/bonsailocal/repair/LocalBenchmark.java').read_text()
  assert 'http://127.0.0.1:18080/completion' in s
  assert 'setInstanceFollowRedirects(false)' in s
- assert '--n-gpu-layers","0"' in (R/'native/bonsai_app.c').read_text()
+
+def test_optional_vulkan_plugin_matches_packaged_ggml_abi():
+ with zipfile.ZipFile(APK) as z, tempfile.TemporaryDirectory() as tmp:
+  plugin=Path(tmp)/'libbonsai_vulkan.so'
+  base=Path(tmp)/'libggml-base.so'
+  plugin.write_bytes(z.read('lib/arm64-v8a/libbonsai_vulkan.so'))
+  base.write_bytes(z.read('lib/arm64-v8a/libggml-base.so'))
+  assert 'lib/arm64-v8a/libggml-vulkan.so' not in z.namelist()
+  data=plugin.read_bytes()
+  assert b'ggml_backend_init' in data and b'ptq1_0' in data and b'fwht' in data.lower()
+  dynamic=subprocess.check_output(['readelf','-d',str(plugin)],text=True)
+  assert '[libggml-base.so]' in dynamic and '[libvulkan.so]' in dynamic
+  assert 'libc++_shared.so' not in dynamic
+  def symbols(path,undefined):
+   output=subprocess.check_output(['readelf','--dyn-syms','-W',str(path)],text=True)
+   return {line.split()[7] for line in output.splitlines() if len(line.split())>=8 and line.split()[0].endswith(':') and (line.split()[6]=='UND')==undefined}
+  required={s for s in symbols(plugin,True) if s.startswith('ggml_')}
+  assert required and not required-symbols(base,False)
+  launcher=z.read('lib/arm64-v8a/libbonsai_app.so')
+  assert b'GGML_BACKEND_PATH' in launcher and b'libbonsai_vulkan.so' in launcher
+  assert b'Vulkan0' in launcher and b'--device' in launcher
 
 def test_inference_libraries_unchanged_from_working_04():
  previous=Path(os.environ.get('PREVIOUS_APK','/mnt/data/BonsaiLocal-0.4-arm64.apk'))

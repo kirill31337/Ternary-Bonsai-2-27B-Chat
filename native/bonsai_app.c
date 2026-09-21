@@ -18,6 +18,7 @@ static long long download_id=-1;
 static char pq_model_path[2048], vision_path[2048];
 static atomic_int vision_enabled, runtime_alive;
 static atomic_int model_choice, ctx_size=16384, kv_q4, threads=4, batch_threads=8, thinking;
+static atomic_int gpu_layers, gpu_offloaded;
 static atomic_flag settings_lock=ATOMIC_FLAG_INIT;
 static void lock_settings(void){while(atomic_flag_test_and_set(&settings_lock))usleep(1000);}
 static void unlock_settings(void){atomic_flag_clear(&settings_lock);}
@@ -228,13 +229,17 @@ static int spawn_child(JNIEnv *e,int test) {
     if(child){fail("Движок уже запущен. Сначала остановите его.");return 0;}
     char exe[2200],outpath[2200];snprintf(exe,sizeof(exe),"%s/libllama_server_exec.so",lib_path);
     snprintf(outpath,sizeof(outpath),"%s/server.log",files_path);
-    char ctx[24],th[16],tb[16];
+    int gpu=atomic_load(&gpu_layers);
+    char ctx[24],th[16],tb[16],ngl[16],gpu_path[2200];
+    snprintf(gpu_path,sizeof(gpu_path),"%s/libbonsai_vulkan.so",lib_path);
+    if(gpu){int fd=open(gpu_path,O_RDONLY);if(fd<0){fail("Библиотека Vulkan недоступна. Выберите CPU или переустановите APK.");return 0;}close(fd);}
+    snprintf(ngl,sizeof(ngl),"%d",gpu);
     snprintf(ctx,sizeof(ctx),"%d",atomic_load(&ctx_size));
     snprintf(th,sizeof(th),"%d",atomic_load(&threads));
     snprintf(tb,sizeof(tb),"%d",atomic_load(&batch_threads));
     int mode=atomic_load(&thinking),q4=atomic_load(&kv_q4);
     const char *args[80]={exe,"--model",chosen_path(),"--host","127.0.0.1","--port","18080",
-        "--ctx-size",ctx,"--threads",th,"--threads-batch",tb,"--n-gpu-layers","0","--parallel","1",
+        "--ctx-size",ctx,"--threads",th,"--threads-batch",tb,"--n-gpu-layers",ngl,"--device",gpu?"Vulkan0":"none","--parallel","1",
         "--batch-size","256","--ubatch-size","128","--flash-attn","on",
         "--cache-type-k",q4?"q4_0":"f16","--cache-type-v",q4?"q4_0":"f16","--jinja",
         "--chat-template-kwargs",mode?"{\"enable_thinking\":true}":"{\"enable_thinking\":false}",
@@ -248,7 +253,9 @@ static int spawn_child(JNIEnv *e,int test) {
         args[count++]="--mmproj";args[count++]=vision_path;args[count++]="--no-mmproj-offload";
         args[count++]="--image-max-tokens";args[count++]="512";
     }
-    const char *check[]={exe,"--version"};int n=test?2:count;
+    const char *check[]={exe,"--version",0,0};
+    if(gpu){check[1]="--device";check[2]="Vulkan0";check[3]="--list-devices";}
+    int n=test?(gpu?4:2):count;
     for(int i=0;i<n;i++)log_line(test?check[i]:args[i]);
     jclass sc=jc(e,"java/lang/String");if(!sc)return 0;
     jobjectArray ar=(*e)->NewObjectArray(e,n,sc,0);if(jerr(e,"NewObjectArray")||!ar)return 0;
@@ -260,11 +267,16 @@ static int spawn_child(JNIEnv *e,int test) {
     jobject pb=make(e,bc,jm(e,bc,"<init>","([Ljava/lang/String;)V"),a,"ProcessBuilder");if(!pb)return 0;
     jobject env=obj(e,pb,jm(e,bc,"environment","()Ljava/util/Map;"),0,"ProcessBuilder.environment");if(!env)return 0;
     jclass mc=jc(e,"java/util/Map");jmethodID put=jm(e,mc,"put","(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");if(!put)return 0;
-    const char *keys[]={"LD_LIBRARY_PATH","GGML_BACKEND_PATH"};
-    for(int i=0;i<2;i++){
-        a[0].l=js(e,keys[i]);a[1].l=js(e,lib_path);if(!a[0].l||!a[1].l)return 0;
-        (void)obj(e,env,put,a,"Map.put");if(atomic_load(&state)==4)return 0;
+    a[0].l=js(e,"LD_LIBRARY_PATH");a[1].l=js(e,lib_path);if(!a[0].l||!a[1].l)return 0;
+    (void)obj(e,env,put,a,"Map.put");if(atomic_load(&state)==4)return 0;
+    a[0].l=js(e,"GGML_BACKEND_PATH");if(!a[0].l)return 0;
+    if(gpu){
+        a[1].l=js(e,gpu_path);if(!a[1].l)return 0;
+        (void)obj(e,env,put,a,"Map.put(GPU)");
+    }else{
+        (void)obj(e,env,jm(e,mc,"remove","(Ljava/lang/Object;)Ljava/lang/Object;"),a,"Map.remove(GPU)");
     }
+    if(atomic_load(&state)==4)return 0;
     a[0].z=JNI_TRUE;
     if(!obj(e,pb,jm(e,bc,"redirectErrorStream","(Z)Ljava/lang/ProcessBuilder;"),a,"redirectErrorStream"))return 0;
     jclass fc=jc(e,"java/io/File");a[0].l=js(e,outpath);if(!a[0].l)return 0;
@@ -272,8 +284,40 @@ static int spawn_child(JNIEnv *e,int test) {
     a[0].l=f;if(!obj(e,pb,jm(e,bc,"redirectOutput","(Ljava/io/File;)Ljava/lang/ProcessBuilder;"),a,"redirectOutput"))return 0;
     jobject proc=obj(e,pb,jm(e,bc,"start","()Ljava/lang/Process;"),0,"ProcessBuilder.start");if(!proc)return 0;
     child=(*e)->NewGlobalRef(e,proc);if(jerr(e,"NewGlobalRef(Process)")||!child)return 0;
-    atomic_store(&runtime_alive,1);child_is_test=test;last_exit=-999;atomic_store(&state,test?6:2);
-    log_line(test?"Runtime self-test started (--version).":"Model loading started by user; runtime settings are logged above; CPU auto-selected by capabilities.");return 1;
+    atomic_store(&runtime_alive,1);atomic_store(&gpu_offloaded,gpu?-1:0);child_is_test=test;last_exit=-999;atomic_store(&state,test?6:2);
+    log_line(test?"Runtime self-test started.":gpu?"Model loading with experimental Vulkan; offload will be checked before ready.":"Model loading on CPU; optional Vulkan plugin is not loaded.");return 1;
+}
+static int positive_mib(const char *p) {
+    while(*p==' ')p++;
+    int digits=0,dots=0,positive=0;
+    while((*p>='0'&&*p<='9')||*p=='.'){
+        if(*p=='.'){if(++dots>1)return 0;}else{digits++;if(*p!='0')positive=1;}
+        p++;
+    }
+    return digits&&positive&&strlen(p)>=4&&memcmp(p," MiB",4)==0;
+}
+static int read_gpu_offload(void) {
+    char path[2200],buf[8321];snprintf(path,sizeof(path),"%s/server.log",files_path);
+    int fd=open(path,O_RDONLY);if(fd<0)return -1;
+    int result=-1,model_buffer=0,compute_buffer=0;size_t carry=0,total=0;
+    while(total<1048576){
+        ssize_t n=read(fd,buf+carry,8192);if(n<=0)break;total+=(size_t)n;
+        size_t length=carry+(size_t)n;buf[length]=0;
+        for(size_t i=0;i+10<length;i++){
+          if(i+27<length&&memcmp(buf+i,"Vulkan0 model buffer size =",27)==0)model_buffer|=positive_mib(buf+i+27);
+          if(i+29<length&&memcmp(buf+i,"Vulkan0 compute buffer size =",29)==0)compute_buffer|=positive_mib(buf+i+29);
+          if(memcmp(buf+i,"offloaded ",10)==0){
+            char *end=0;long long count=strtoll(buf+i+10,&end,10);
+            if(end>buf+i+10&&*end=='/'&&count>=0&&count<=1024){
+                char *tail=0;long long all=strtoll(end+1,&tail,10);
+                if(all>=count&&tail>end+1&&(size_t)(buf+length-tail)>=14&&memcmp(tail," layers to GPU",14)==0)result=(int)count;
+            }
+          }
+        }
+        carry=length<128?length:128;
+        for(size_t i=0;i<carry;i++)buf[i]=buf[length-carry+i];
+    }
+    close(fd);return model_buffer&&compute_buffer?result:-1;
 }
 static int healthy(JNIEnv *e) {
     // Health HTTP status, NOT merely whether a TCP port is open.
@@ -323,7 +367,12 @@ static void *run(void *unused) {
                 if(child_is_test && last_exit==0){clear_error();atomic_store(&state,complete_model()?5:0);log_line("Runtime self-test passed, exit code 0. This is not a model inference test.");}
                 else {char msg[220];snprintf(msg,sizeof(msg),"llama-server завершился, код %d. Откройте «Диагностика»: подробности в server.log.",last_exit);fail(msg);}
             }else if(!child_is_test && atomic_load(&state)==2 && (ticks%2)==0 && healthy(e)){
-                atomic_store(&state,3);log_line("llama-server /health returned HTTP 200.");
+                int actual=atomic_load(&gpu_layers)?read_gpu_offload():0;
+                atomic_store(&gpu_offloaded,actual);
+                if(atomic_load(&gpu_layers)&&actual<=0){
+                    dispose_child(e,1);
+                    fail("Vulkan не подтвердил перенос слоёв на GPU. Выберите CPU; подробности в диагностике.");
+                }else{atomic_store(&state,3);log_line("llama-server /health returned HTTP 200; requested backend verified.");}
             }
         }
         (*e)->PopLocalFrame(e,0);ticks++;usleep(500000);
@@ -369,7 +418,7 @@ JNIEXPORT void JNICALL Java_com_prismml_bonsailocal_repair_Bridge_init(JNIEnv *e
     atomic_store(&vision_enabled,0);atomic_store(&runtime_alive,0);
     atomic_store(&model_choice,0);atomic_store(&ctx_size,16384);atomic_store(&kv_q4,0);atomic_store(&threads,4);atomic_store(&batch_threads,8);atomic_store(&thinking,0);
     snprintf(log_path,sizeof(log_path),"%s/native.log",files_path);
-    char msg[240];snprintf(msg,sizeof(msg),"Bonsai Local 1.0.0 native init; page size=%d; Prism runtime 9a9394a",getpagesize());log_line(msg);
+    char msg[240];snprintf(msg,sizeof(msg),"Bonsai Local 1.2.0 native init; page size=%d; Prism runtime 9a9394a",getpagesize());log_line(msg);
     if((*e)->GetJavaVM(e,&vm)!=JNI_OK){fail("GetJavaVM failed");return;}
     app_context=(*e)->NewGlobalRef(e,context);if(jerr(e,"NewGlobalRef(Context)")||!app_context)return;
     atomic_store(&stop_flag,0);atomic_store(&command,0);clear_error();restore_id();atomic_store(&state,complete_model()?5:0);
@@ -379,20 +428,25 @@ JNIEXPORT void JNICALL Java_com_prismml_bonsailocal_repair_Bridge_init(JNIEnv *e
 JNIEXPORT jstring JNICALL Java_com_prismml_bonsailocal_repair_Bridge_status(JNIEnv *e,jobject o) {
     (void)o;char raw[2048],escaped[12300],json[12800];lock_error();snprintf(raw,sizeof(raw),"%s",error_text);unlock_error();
     bonsai_json_escape(raw,escaped,sizeof(escaped));
-    snprintf(json,sizeof(json),"{\"state\":%d,\"done\":%lld,\"total\":%lld,\"exit\":%d,\"pending\":%d,\"modelIndex\":%d,\"ctxSize\":%d,\"kvQ4\":%s,\"threads\":%d,\"batchThreads\":%d,\"thinking\":%d,\"vision\":%s,\"alive\":%s,\"error\":\"%s\"}",
-        atomic_load(&state),atomic_load(&completed_bytes),atomic_load(&total_bytes),atomic_load(&last_exit),atomic_load(&command),atomic_load(&model_choice),atomic_load(&ctx_size),atomic_load(&kv_q4)?"true":"false",atomic_load(&threads),atomic_load(&batch_threads),atomic_load(&thinking),atomic_load(&vision_enabled)?"true":"false",atomic_load(&runtime_alive)?"true":"false",escaped);
+    snprintf(json,sizeof(json),"{\"state\":%d,\"done\":%lld,\"total\":%lld,\"exit\":%d,\"pending\":%d,\"modelIndex\":%d,\"ctxSize\":%d,\"kvQ4\":%s,\"threads\":%d,\"batchThreads\":%d,\"thinking\":%d,\"gpuLayers\":%d,\"gpuReportedLayers\":%d,\"vision\":%s,\"alive\":%s,\"error\":\"%s\"}",
+        atomic_load(&state),atomic_load(&completed_bytes),atomic_load(&total_bytes),atomic_load(&last_exit),atomic_load(&command),atomic_load(&model_choice),atomic_load(&ctx_size),atomic_load(&kv_q4)?"true":"false",atomic_load(&threads),atomic_load(&batch_threads),atomic_load(&thinking),atomic_load(&gpu_layers),atomic_load(&gpu_offloaded),atomic_load(&vision_enabled)?"true":"false",atomic_load(&runtime_alive)?"true":"false",escaped);
     return (*e)->NewStringUTF(e,json);
 }
 static int valid_ctx(int n){return n==4096||n==8192||n==16384||n==32768||n==65536||n==131072||n==262144;}
 static int valid_threads(int n){return n==2||n==4||n==6||n==8;}
-JNIEXPORT jboolean JNICALL Java_com_prismml_bonsailocal_repair_Bridge_configureOptions(JNIEnv *e,jobject o,jint model,jint ctx,jboolean q4,jint th,jint tb,jint reason){
+JNIEXPORT jboolean JNICALL Java_com_prismml_bonsailocal_repair_Bridge_configureRuntime(JNIEnv *e,jobject o,jint model,jint ctx,jboolean q4,jint th,jint tb,jint reason,jint gpu){
     (void)e;(void)o;
     if(model<0||model>1||!valid_ctx(ctx)||!valid_threads(th)||!valid_threads(tb)||reason<0||reason>2)return JNI_FALSE;
+    if((gpu!=0&&gpu!=8&&gpu!=16&&gpu!=32&&gpu!=99)||(gpu&&model!=0))return JNI_FALSE;
     lock_settings();int st=atomic_load(&state);
     if(!initialized||atomic_load(&runtime_alive)||atomic_load(&command)!=0||st==1||st==2||st==3||st==6){unlock_settings();return JNI_FALSE;}
     atomic_store(&model_choice,model);atomic_store(&ctx_size,ctx);atomic_store(&kv_q4,q4?1:0);
     atomic_store(&threads,th);atomic_store(&batch_threads,tb);atomic_store(&thinking,reason);
+    atomic_store(&gpu_layers,gpu);atomic_store(&gpu_offloaded,gpu?-1:0);
     clear_error();atomic_store(&state,complete_model()?5:0);unlock_settings();return JNI_TRUE;
+}
+JNIEXPORT jboolean JNICALL Java_com_prismml_bonsailocal_repair_Bridge_configureOptions(JNIEnv *e,jobject o,jint model,jint ctx,jboolean q4,jint th,jint tb,jint reason){
+    return Java_com_prismml_bonsailocal_repair_Bridge_configureRuntime(e,o,model,ctx,q4,th,tb,reason,0);
 }
 JNIEXPORT jboolean JNICALL Java_com_prismml_bonsailocal_repair_Bridge_configureVision(JNIEnv *e,jobject o,jboolean on){
     (void)e;(void)o;lock_settings();int st=atomic_load(&state);

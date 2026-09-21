@@ -11,10 +11,10 @@ bash tests/run_jni.sh
 python3 tests/run_adapter_host.py
 mkdir -p build/options-test
 javac -d build/options-test java/com/prismml/bonsailocal/repair/{ModelCatalog,RuntimeOptions,LocalBenchmark}.java tests/options/com/prismml/bonsailocal/repair/*.java
-for test in ModelOptionsTest BenchmarkTest; do
+for test in ModelOptionsTest GpuOptionsTest BenchmarkTest; do
  java -cp build/options-test "com.prismml.bonsailocal.repair.$test"
 done
-TEST_APK="${TEST_APK:-build/BonsaiLocal-1.1.2-arm64.apk}" python3 -m pytest -q
+TEST_APK="${TEST_APK:-build/BonsaiLocal-1.2.0-arm64.apk}" python3 -m pytest -q
 node tests/ui_state_test.cjs
 
 python3 tests/run_extensions_host.py

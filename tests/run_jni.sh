@@ -8,6 +8,6 @@ javac -d build/host-classes tests/jvm/com/prismml/bonsailocal/repair/*.java
 java -Xcheck:jni -Dbonsai.lib="$PWD/build/libbonsai_host.so" \
   -cp build/host-classes com.prismml.bonsailocal.repair.Bridge
 
-for t in OptionsRegression ShutdownRegression VisionRegression; do
+for t in OptionsRegression ShutdownRegression VisionRegression GpuRegression; do
  java -Xcheck:jni -Dbonsai.lib="$PWD/build/libbonsai_host.so" -cp build/host-classes "com.prismml.bonsailocal.repair.$t"
 done

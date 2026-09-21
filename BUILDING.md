@@ -16,7 +16,9 @@
 - clang/lld with AArch64 Android target support
 - Android SDK platform 35 or newer
 - Apktool 3.x
-- a fat Java tool jar containing D8 + apksig (the historical build uses jadx-all)
+- Android SDK build-tools 35.0.0 (`d8.jar` and `apksigner.jar`)
+- Android NDK r29 (`29.0.14206865`), CMake, Ninja
+- Vulkan SDK 1.4.357.1 for Linux (host shader compiler and headers)
 
 ## Fetch pinned runtime
 
@@ -27,11 +29,27 @@ bash scripts/fetch_prism_runtime.sh
 The script downloads the pinned upstream Prism Android runtime and validates
 its archive/library hashes against `runtime-sha256.json`.
 
+Build the optional Vulkan plugin from the **same** pinned Prism commit:
+
+```bash
+export ANDROID_NDK="$ANDROID_SDK_ROOT/ndk/29.0.14206865"
+export VULKAN_SDK=/path/to/1.4.357.1/x86_64
+export VULKAN_SDK_VERSION=1.4.357.1
+export LD_LIBRARY_PATH="$VULKAN_SDK/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+bash scripts/build_vulkan_runtime.sh
+```
+
+The plugin is deliberately named `libbonsai_vulkan.so`. GPU launches load it
+explicitly through `GGML_BACKEND_PATH`; CPU launches do not initialize it.
+The build verifies its generated provenance before packaging. All original CPU
+runtime libraries remain unchanged. CI and release workflows build the plugin
+from source, using the NDK's Android Vulkan loader and static C++ runtime.
+
 ## Build
 
 ```bash
 export APKTOOL_JAR=/path/to/apktool.jar
-export ANDROID_TOOLS_JAR=/path/to/jadx-all.jar
+export ANDROID_TOOLS_JAR="$ANDROID_SDK_ROOT/build-tools/35.0.0/lib/d8.jar:$ANDROID_SDK_ROOT/build-tools/35.0.0/lib/apksigner.jar"
 export ANDROID_JAR="$ANDROID_SDK_ROOT/platforms/android-35/android.jar"
 
 # Optional: enforce signing-certificate continuity against an installed build
@@ -41,7 +59,7 @@ bash build_apk.sh
 bash tests/run_all.sh
 ```
 
-Output: `build/BonsaiLocal-1.1.2-arm64.apk`.
+Output: `build/BonsaiLocal-1.2.0-arm64.apk`.
 
 The APK targets API 35 (Android 15) and retains minimum API 28 (Android 9).
 `resources.arsc` must remain uncompressed and its ZIP payload must be 4-byte

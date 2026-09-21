@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 : "${APKTOOL_JAR:?Set APKTOOL_JAR to a compatible Apktool 3.x jar}"
-: "${ANDROID_TOOLS_JAR:?Set ANDROID_TOOLS_JAR to the retained jadx fat jar containing D8 and apksig}"
+: "${ANDROID_TOOLS_JAR:?Set ANDROID_TOOLS_JAR to d8.jar:apksigner.jar (Android SDK build-tools)}"
 mkdir -p build build/dex build/tools
 if [[ ${COMPILE_JAVA:-1} == 1 ]]; then
   python3 make_api_stubs.py
@@ -50,6 +50,8 @@ PY_NATIVE
 else
   python3 build_native.py
 fi
+# A production build must contain the optional plugin and its verified provenance.
+python3 scripts/verify_vulkan_runtime.py
 java -jar "$APKTOOL_JAR" b app -o build/unsigned.apk
 javac -cp "$ANDROID_TOOLS_JAR" -d build/tools tools/SignApk.java
 KEYSTORE="${SIGNING_KEYSTORE:-signing/development.keystore}"
@@ -62,6 +64,6 @@ if [[ ! -f "$KEYSTORE" ]]; then
   echo "Set SIGNING_KEYSTORE/SIGNING_* or create an ephemeral test key for CI." >&2
   exit 2
 fi
-java -cp "$ANDROID_TOOLS_JAR:build/tools" SignApk build/unsigned.apk build/BonsaiLocal-1.1.2-arm64.apk "$KEYSTORE" "$ALIAS" "$STOREPASS" "$KEYPASS" "$PREV"
-TEST_APK=build/BonsaiLocal-1.1.2-arm64.apk python3 -m pytest -q
+java -cp "$ANDROID_TOOLS_JAR:build/tools" SignApk build/unsigned.apk build/BonsaiLocal-1.2.0-arm64.apk "$KEYSTORE" "$ALIAS" "$STOREPASS" "$KEYPASS" "$PREV"
+TEST_APK=build/BonsaiLocal-1.2.0-arm64.apk python3 -m pytest -q
 node tests/ui_state_test.cjs
